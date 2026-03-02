@@ -27,7 +27,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: arn:aws:iam::871806636838:role/github-actions-ecr-push
+          role-to-assume: arn:aws:iam::871806636838:role/github-actions
           role-session-name: github-actions-ecr
 
       - name: Verify AWS identity
