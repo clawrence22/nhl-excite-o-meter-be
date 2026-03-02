@@ -1,0 +1,26 @@
+{
+    "serviceName": "nhl-excit-o-meter-be",
+    "containers": {
+       "nhl-excit-o-meter-be": {
+          "image": "871806636838.dkr.ecr.us-east-1.amazonaws.com/nhl-excit-o-meter-be:1.0.0",
+          "environment": {
+            "FLASK_ENV": "production"
+          },
+          "ports": {
+            "5001": "HTTP"
+          }
+        }
+    },
+    "publicEndpoint":  {
+        "containerName": "nhl-excit-o-meter-be",
+        "containerPort": 5001,
+        "healthCheck": {
+          "path": "/healthz",
+          "successCodes": "200-299",
+          "intervalSeconds": 5,
+          "timeoutSeconds": 2,
+          "healthyThreshold": 3,
+          "unhealthyThreshold": 3
+        }
+      }
+}

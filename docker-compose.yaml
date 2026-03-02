@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  excite-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: excite_api
+    ports:
+      - "5001:5001"   # host:container
+    environment:
+      # Set Flask to non-reloader mode inside container (we mount the code for live edits)
+      PYTHONUNBUFFERED: "1"
+    command: ["python", "main.py"]
+    restart: unless-stopped
+    networks:
+      - dbaccess
+  
+networks:
+  dbaccess:
+    external: true
