@@ -139,7 +139,7 @@ resource "aws_ecs_task_definition" "app" {
       image     = var.app_image
       essential = true
       healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhos:5001/healthz || exit 1"]
+        command     = ["CMD-SHELL", "curl -f http://localhost:5001/healthz || exit 1"]
         interval    = 30
         timeout     = 5
         retries     = 3
