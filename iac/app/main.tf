@@ -118,7 +118,7 @@ resource "aws_iam_role_policy" "ecs_task_db_connect" {
         "rds-db:connect"
       ]
       Resource = [
-        "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser/${var.db_resource_id}/${var.db_iam_username}"
+        "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser:${var.db_resource_id}/${var.db_iam_username}"
       ]
     }]
   })
