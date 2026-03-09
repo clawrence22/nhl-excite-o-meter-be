@@ -60,7 +60,7 @@ jobs:
       - name: Terraform Plan
         run: |
           terraform -chdir=iac/app plan -input=false \
-            -var="container_image=${{ steps.image.outputs.uri }}" \
+            -var="app_image=${{ steps.image.outputs.uri }}" \
             -out=tfplan
 
       - name: Terraform Apply
