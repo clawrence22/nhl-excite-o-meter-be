@@ -1,13 +1,3 @@
-output "alb_dns_name" {
-  description = "Public DNS name of the application load balancer."
-  value       = aws_lb.app.dns_name
-}
-
-output "alb_zone_id" {
-  description = "Route53 zone ID of the ALB (use for alias records)."
-  value       = aws_lb.app.zone_id
-}
-
 output "ecs_cluster_name" {
   description = "ECS cluster name."
   value       = aws_ecs_cluster.main.name

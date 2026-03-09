@@ -1,0 +1,67 @@
+name: Deploy with Terraform
+
+on:
+  workflow_run:
+    workflows:
+      - Build and Push Docker Image
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Optional image tag to deploy (defaults to triggering commit SHA)"
+        required: false
+        type: string
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: "871806636838"
+  ECR_REPOSITORY_NAME: nhl-excit-o-meter-be
+
+jobs:
+  terraform-deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: image
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.image_tag }}" ]; then
+            TAG="${{ inputs.image_tag }}"
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+            TAG="${{ github.event.workflow_run.head_sha }}"
+          else
+            TAG="${{ github.sha }}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "uri=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::871806636838:role/github-actions
+          role-session-name: github-actions-terraform
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init (S3 backend)
+        run: |
+          terraform -chdir=iac init -input=false
+
+      - name: Terraform Plan
+        run: |
+          terraform -chdir=iac/app plan -input=false \
+            -var="container_image=${{ steps.image.outputs.uri }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform -chdir=iac/app apply -input=false -auto-approve tfplan

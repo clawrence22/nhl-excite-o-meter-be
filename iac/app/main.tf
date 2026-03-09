@@ -1,18 +1,3 @@
-terraform {
-  required_version = ">= 1.5.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
 locals {
   tags = {
     Project     = var.project_name
@@ -23,40 +8,19 @@ locals {
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_security_group" "alb" {
-  name        = "${var.project_name}-alb-sg"
-  description = "ALB security group"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(local.tags, {
-    Name = "${var.project_name}-alb-sg"
-  })
-}
-
 resource "aws_security_group" "ecs_service" {
   name        = "${var.project_name}-ecs-sg"
   description = "ECS service security group"
   vpc_id      = var.vpc_id
 
-  ingress {
-    from_port       = var.app_port
-    to_port         = var.app_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+  dynamic "ingress" {
+    for_each = toset(var.frontend_security_group_ids)
+    content {
+      from_port       = var.app_port
+      to_port         = var.app_port
+      protocol        = "tcp"
+      security_groups = [ingress.value]
+    }
   }
 
   egress {
@@ -69,51 +33,6 @@ resource "aws_security_group" "ecs_service" {
   tags = merge(local.tags, {
     Name = "${var.project_name}-ecs-sg"
   })
-}
-
-resource "aws_lb" "app" {
-  name               = substr(replace("${var.project_name}-alb", "_", "-"), 0, 32)
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = var.public_subnet_ids
-
-  tags = merge(local.tags, {
-    Name = "${var.project_name}-alb"
-  })
-}
-
-resource "aws_lb_target_group" "app" {
-  name        = substr(replace("${var.project_name}-tg", "_", "-"), 0, 32)
-  port        = var.app_port
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = var.vpc_id
-
-  health_check {
-    enabled             = true
-    path                = var.health_check_path
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-    timeout             = var.health_check_timeout_seconds
-    interval            = var.health_check_interval_seconds
-  }
-
-  tags = merge(local.tags, {
-    Name = "${var.project_name}-tg"
-  })
-}
-
-resource "aws_lb_listener" "http_forward" {
-  load_balancer_arn = aws_lb.app.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
-  }
 }
 
 resource "aws_cloudwatch_log_group" "ecs" {
@@ -254,8 +173,8 @@ resource "aws_ecs_task_definition" "app" {
 
   lifecycle {
     precondition {
-      condition     = var.vpc_id != "" && length(var.public_subnet_ids) > 0 && length(var.private_app_subnet_ids) > 0
-      error_message = "Set vpc_id, public_subnet_ids, and private_app_subnet_ids from network stack outputs."
+      condition     = var.vpc_id != "" && length(var.private_app_subnet_ids) > 0
+      error_message = "Set vpc_id and private_app_subnet_ids from network stack outputs."
     }
     precondition {
       condition     = var.db_secret_arn != ""
@@ -283,12 +202,6 @@ resource "aws_ecs_service" "app" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.app.arn
-    container_name   = var.project_name
-    container_port   = var.app_port
-  }
-
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
 
@@ -306,10 +219,6 @@ resource "aws_ecs_service" "app" {
       }
     }
   }
-
-  depends_on = [
-    aws_lb_listener.http_forward
-  ]
 
   tags = local.tags
 }

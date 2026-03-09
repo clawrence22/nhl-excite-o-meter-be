@@ -9,8 +9,9 @@ This directory is split into two stacks:
 
 ```bash
 cd iac/network
-cp terraform.tfvars.example terraform.tfvars
-terraform init
+# edit terraform.tfvars
+# edit backend.hcl with your S3 bucket + DynamoDB lock table
+terraform init -backend-config=backend.hcl -migrate-state
 terraform plan
 terraform apply
 ```
@@ -37,11 +38,12 @@ App stack assumes IAM DB auth is always enabled.
 
 ```bash
 cd iac/app
-cp terraform.tfvars.example terraform.tfvars
+# edit terraform.tfvars
+# edit backend.hcl with your S3 bucket + DynamoDB lock table
 # fill vpc/subnet values from network outputs
 # fill service_connect_namespace_arn from network outputs (if using Service Connect)
 # fill db_secret_arn/db_resource_id from DB repo outputs
-terraform init
+terraform init -backend-config=backend.hcl -migrate-state
 terraform plan
 terraform apply
 ```

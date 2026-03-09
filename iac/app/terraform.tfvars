@@ -2,24 +2,20 @@ aws_region   = "us-east-1"
 project_name = "nhl-excite-o-meter-be"
 environment  = "prod"
 
-app_image                     = "871806636838.dkr.ecr.us-east-1.amazonaws.com/nhl-excit-o-meter-be:1.0.0"
-flask_env                     = "production"
-health_check_path             = "/healthz"
-health_check_interval_seconds = 5
-health_check_timeout_seconds  = 2
+app_image = "871806636838.dkr.ecr.us-east-1.amazonaws.com/nhl-excit-o-meter-be:1.0.0"
+flask_env = "production"
 
 # Required from network stack outputs
 vpc_id = "vpc-010c8bf40cdf46b38"
-public_subnet_ids = [
-  "subnet-036d25c00629af481",
-  "subnet-0cc61dc319782a5dd",
-]
 private_app_subnet_ids = [
   "subnet-09a2b7ffb189d3bf7",
   "subnet-0de4c6f94d02724eb",
 ]
 # Optional from network stack output (for ECS Service Connect integration)
 service_connect_namespace_arn = "arn:aws:servicediscovery:us-east-1:871806636838:namespace/ns-6bvfavc37y2wydek"
+
+# Required for backend ingress: allow frontend ECS service SG(s) to reach app_port.
+frontend_security_group_ids = []
 
 db_iam_username = "app_iam"
 

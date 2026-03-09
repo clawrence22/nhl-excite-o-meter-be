@@ -10,7 +10,7 @@ env:
   AWS_REGION: us-east-1
   AWS_ACCOUNT_ID: "871806636838"
   ECR_REPOSITORY_NAME: nhl-excit-o-meter-be
-  VERSION: "1.0.0"
+  VERSION: ${{ github.sha }}
 
 jobs:
   docker-build:

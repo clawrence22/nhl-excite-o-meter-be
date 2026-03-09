@@ -22,14 +22,14 @@ variable "vpc_id" {
   default     = ""
 }
 
-variable "public_subnet_ids" {
-  description = "Public subnet IDs from network stack outputs."
+variable "private_app_subnet_ids" {
+  description = "Private app subnet IDs from network stack outputs."
   type        = list(string)
   default     = []
 }
 
-variable "private_app_subnet_ids" {
-  description = "Private app subnet IDs from network stack outputs."
+variable "frontend_security_group_ids" {
+  description = "Security group IDs allowed to call this backend service on app_port."
   type        = list(string)
   default     = []
 }
@@ -47,27 +47,9 @@ variable "app_image" {
 }
 
 variable "app_port" {
-  description = "Container and target group port."
+  description = "Container port."
   type        = number
   default     = 5001
-}
-
-variable "health_check_path" {
-  description = "ALB target group health check path."
-  type        = string
-  default     = "/healthz"
-}
-
-variable "health_check_interval_seconds" {
-  description = "ALB target group health check interval in seconds."
-  type        = number
-  default     = 5
-}
-
-variable "health_check_timeout_seconds" {
-  description = "ALB target group health check timeout in seconds."
-  type        = number
-  default     = 2
 }
 
 variable "ecs_task_cpu" {
