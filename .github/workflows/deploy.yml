@@ -65,3 +65,18 @@ jobs:
 
       - name: Terraform Apply
         run: terraform -chdir=iac/app apply -input=false -auto-approve tfplan
+      
+      - name: Wait for ECS service to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster nhl-excite-o-meter-be-cluster \
+            --services nhl-excite-o-meter-be-service
+
+      - name: Show final ECS status
+        run: |
+          aws ecs describe-services \
+            --cluster nhl-excite-o-meter-be-cluster \
+            --services nhl-excite-o-meter-be-service \
+            --query 'services[0].{running:runningCount,desired:desiredCount,rollout:deployments[0].rolloutState}' \
+            --output table
+
