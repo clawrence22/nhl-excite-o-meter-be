@@ -15,7 +15,7 @@ private_app_subnet_ids = [
 service_connect_namespace_arn = "arn:aws:servicediscovery:us-east-1:871806636838:namespace/ns-6bvfavc37y2wydek"
 
 # Required for backend ingress: allow frontend ECS service SG(s) to reach app_port.
-frontend_security_group_ids = []
+frontend_security_group_ids = ["sg-0621ba9113601c153"]
 
 db_iam_username = "app_iam"
 
