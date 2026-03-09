@@ -55,7 +55,7 @@ jobs:
 
       - name: Terraform Init (S3 backend)
         run: |
-          terraform -chdir=iac init -input=false
+          terraform -chdir=iac/app init -input=false
 
       - name: Terraform Plan
         run: |
