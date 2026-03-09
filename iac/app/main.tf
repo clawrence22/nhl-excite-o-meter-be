@@ -138,6 +138,13 @@ resource "aws_ecs_task_definition" "app" {
       name      = var.project_name
       image     = var.app_image
       essential = true
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost/healthz || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
       portMappings = [
         {
           name          = "app"
