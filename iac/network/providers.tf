@@ -2,11 +2,11 @@ terraform {
   required_version = ">= 1.5.0"
 
   backend "s3" {
-    bucket         = "nhl-excite-o-meter-tf-state"
-    key            = "nhl-excite-o-meter-net/prod/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "nhl-excite-o-meter-tf-state"
-    encrypt        = true
+    bucket       = "nhl-excite-o-meter-tf-state"
+    key          = "nhl-excite-o-meter-net/prod/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true
   }
 
   required_providers {
