@@ -34,10 +34,9 @@ import traceback
 from flask import Flask, jsonify, request, make_response, g
 from flask_cors import CORS
 
-from logging_config import setup_logging
-import preview
-
-import db
+from .logging_config import setup_logging
+from . import preview
+from . import db
 
 def create_app() -> Flask:
     """Assemble the Flask API with shared dependencies.

@@ -1,33 +1,72 @@
-# NHL Excite‑o‑Meter Backend
+# NHL Excite-o-Meter Backend
 
-## Project Structure
+Backend service that generates NHL game excitement previews and scores.
+
+**Structure**
 ```
 nhl-excite-o-meter-be/
-├── backend/           # Flask API
-│   ├── main
-│   ├── exciteo/
-│   ├── requirements.txt
-│   └── Dockerfile
+├── src/nhl_excite_o_meter/   # Application package
+├── tests/                    # Pytest suite
+├── iac/                      # Terraform stacks
+├── Dockerfile
 ├── docker-compose.yaml
+├── pyproject.toml
 └── runLocal.sh
 ```
 
-## Local Dev
+**Requirements**
+- Python 3.11+
+- Docker or Podman (optional)
+- AWS credentials if accessing RDS with IAM auth
+
+**Environment Variables**
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_NAME`
+- `DB_REGION`
+- `DB_SSLMODE`
+
+**Local Setup**
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+**Run Locally**
+```bash
+python -m nhl_excite_o_meter
+```
+
+**Run With Podman Compose**
 ```bash
 bash runLocal.sh
 ```
 
-- API: http://localhost:5001
-
-## Test
+**Run With Docker**
 ```bash
-curl http://localhost:5001/healthz
-curl http://localhost:5001/excitement/2023020204
-curl "http://localhost:5001/excitement/batch?ids=2023020204,2023020205"
+docker build -t nhl-excite-o-meter-be .
+docker run --rm -p 5001:5001 \
+  -e DB_HOST=... \
+  -e DB_PORT=5432 \
+  -e DB_USER=... \
+  -e DB_NAME=... \
+  -e DB_REGION=us-east-1 \
+  -e DB_SSLMODE=require \
+  nhl-excite-o-meter-be
 ```
 
-## Notes
-- Uses **api-web** PBP endpoint only (no statsapi).
-- Recency decay uses event order (configurable via `EVENT_SPACING_SEC` in `exciteo/config.py`).
-- Tuning knobs live in `exciteo/config.py`.
-- Core math is in `exciteo/scoring.py`; NHL client & cache are in `exciteo/nhl_client.py`.
+**Health Check**
+```bash
+curl http://localhost:5001/healthz
+```
+
+**Tests**
+```bash
+python -m pytest -q
+```
+
+**Notes**
+- The API pulls NHL data from the `api-web` play-by-play endpoint.
+- Preview scoring is implemented in `src/nhl_excite_o_meter/preview_excitement_score.py`.

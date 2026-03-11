@@ -6,7 +6,7 @@ import psycopg2
 import traceback
 import boto3
 
-from logging_config import setup_logging
+from .logging_config import setup_logging
 
 DB_HOST = os.environ["DB_HOST"]
 DB_PORT = int(os.environ["DB_PORT"])
@@ -152,19 +152,19 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
         select_team_games = sql.SQL(
             "WITH team_games AS ("
             "SELECT id, game_date, home_tla AS team_tla, "
-            "home_goals AS goals_for, away_goals AS goals_against, "
-            "home_xg AS xg_for, away_xg AS xg_against, "
-            "home_hits AS hits_for, away_hits AS hits_against, "
-            "home_hdc AS hdc_for, away_hdc AS hdc_against, "
-            "home_mdc AS mdc_for, away_mdc AS mdc_against "
+            "home_goals AS goals_for, "
+            "home_xg AS xg_for, "
+            "home_hits AS hits_for, "
+            "home_hdc AS hdc_for, "
+            "home_mdc AS mdc_for, "
             "FROM public.games WHERE home_tla={team_tla} "
             "UNION ALL "
             "SELECT id, game_date, away_tla AS team_tla, "
-            "away_goals AS goals_for, home_goals AS goals_against, "
-            "away_xg AS xg_for, home_xg AS xg_against, "
-            "away_hits AS hits_for, home_hits AS hits_against, "
-            "away_hdc AS hdc_for, home_hdc AS hdc_against, "
-            "away_mdc AS mdc_for, home_mdc AS mdc_against "
+            "away_goals AS goals_for, "
+            "away_xg AS xg_for, "
+            "away_hits AS hits_for, "
+            "away_hdc AS hdc_for, "
+            "away_mdc AS mdc_for, "
             "FROM public.games WHERE away_tla={team_tla}"
             "), "
             "recent_team_games AS ("
@@ -175,15 +175,10 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             "SELECT "
             "COUNT(*)::int AS games_played, "
             "AVG(goals_for)::float AS goals_for_avg, "
-            "AVG(goals_against)::float AS goals_against_avg, "
             "AVG(xg_for)::float AS xg_for_avg, "
-            "AVG(xg_against)::float AS xg_against_avg, "
             "AVG(hits_for)::float AS hits_for_avg, "
-            "AVG(hits_against)::float AS hits_against_avg, "
             "AVG(hdc_for)::float AS hdc_for_avg, "
-            "AVG(hdc_against)::float AS hdc_against_avg, "
             "AVG(mdc_for)::float AS mdc_for_avg, "
-            "AVG(mdc_against)::float AS mdc_against_avg "
             "FROM recent_team_games"
         ).format(team_tla=sql.Literal(team_tla), game_limit=sql.Literal(lookback_games))
 
@@ -191,40 +186,6 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
         return cur.fetchone()
     except Exception as e:
         logger.error("Error fetching recent team stats: %s", e)
-        return None
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-def get_league_averages():
-    conn = None
-    cur = None
-    try:
-        conn = _connect()
-        cur = conn.cursor()
-
-        cur.execute(
-            """
-            SELECT
-                AVG(goals)::float AS goals_avg,
-                AVG(xg)::float AS xg_avg,
-                AVG(hits)::float AS hits_avg,
-                AVG(hdc)::float AS hdc_avg,
-                AVG(mdc)::float AS mdc_avg
-            FROM (
-                SELECT home_goals AS goals, home_xg AS xg, home_hits AS hits, home_hdc AS hdc, home_mdc AS mdc
-                FROM public.games
-                UNION ALL
-                SELECT away_goals AS goals, away_xg AS xg, away_hits AS hits, away_hdc AS hdc, away_mdc AS mdc
-                FROM public.games
-            ) AS team_games
-            """
-        )
-        return cur.fetchone()
-    except Exception as e:
-        logger.error("Error fetching league averages: %s", e)
         return None
     finally:
         if cur:
