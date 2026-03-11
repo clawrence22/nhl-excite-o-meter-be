@@ -69,7 +69,7 @@ def _team_rates_stub(monkeypatch):
     "home,away,expected_label",
     [
         ("EDM", "TOR", "Barn Burner"),
-        ("NSH", "MIN", "Meh"),
+        ("NSH", "MIN", "Mid"),
         ("VGK", "NYI", "Mid"),
         ("NYR", "SJS", "Buzzin"),
     ],
