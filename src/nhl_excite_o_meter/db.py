@@ -156,7 +156,7 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             "home_xg AS xg_for, "
             "home_hits AS hits_for, "
             "home_hdc AS hdc_for, "
-            "home_mdc AS mdc_for, "
+            "home_mdc AS mdc_for "
             "FROM public.games WHERE home_tla={team_tla} "
             "UNION ALL "
             "SELECT id, game_date, away_tla AS team_tla, "
@@ -164,7 +164,7 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             "away_xg AS xg_for, "
             "away_hits AS hits_for, "
             "away_hdc AS hdc_for, "
-            "away_mdc AS mdc_for, "
+            "away_mdc AS mdc_for "
             "FROM public.games WHERE away_tla={team_tla}"
             "), "
             "recent_team_games AS ("
@@ -178,7 +178,7 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             "AVG(xg_for)::float AS xg_for_avg, "
             "AVG(hits_for)::float AS hits_for_avg, "
             "AVG(hdc_for)::float AS hdc_for_avg, "
-            "AVG(mdc_for)::float AS mdc_for_avg, "
+            "AVG(mdc_for)::float AS mdc_for_avg "
             "FROM recent_team_games"
         ).format(team_tla=sql.Literal(team_tla), game_limit=sql.Literal(lookback_games))
 
