@@ -4,7 +4,7 @@ from typing import Dict
 
 import numpy as np
 
-from .teamrates import build_team_rates, get_expected_value
+from .teamrates import build_team_rates
 
 from .preview_excitement_score import calculate_excitement_score
 

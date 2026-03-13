@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import atexit
 from datetime import datetime
 from threading import Lock
 from typing import Any, Tuple
@@ -54,6 +55,9 @@ def create_app() -> Flask:
         "http://localhost:8080",
         "http://localhost:3000",
     }
+
+    db.init_db_pool()
+    atexit.register(db.close_db_pool)
 
     @app.after_request
     def add_cors_headers(resp):
