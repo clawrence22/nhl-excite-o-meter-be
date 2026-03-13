@@ -21,31 +21,29 @@ def make_rates(
     # Keep low/high equal to average for deterministic testing.
     return TeamRates(
         goals_for=goals_for,
-        goals_for_low=goals_for,
-        goals_for_high=goals_for,
         xg_for=xg_for,
-        xg_for_low=xg_for,
-        xg_for_high=xg_for,
         hits_for=hits_for,
-        hits_for_low=hits_for,
-        hits_for_high=hits_for,
         hdc_for=hdc_for,
-        hdc_for_low=hdc_for,
-        hdc_for_high=hdc_for,
-        mdc_for=mdc_for,
-        mdc_for_low=mdc_for,
-        mdc_for_high=mdc_for,
+        mdc_for=mdc_for
     )
 
 
 PROFILES = {
+
+    ##Mid
+    "CBJ": make_rates(goals_for=4.2, xg_for=3.4, hits_for=18.0, hdc_for=13.0, mdc_for=12.0),
+    "FLA": make_rates(goals_for=2.8, xg_for=2.5, hits_for=27.0, hdc_for=15.0, mdc_for=9.0),
+
+    ##Burner
     "EDM": make_rates(goals_for=4.1, xg_for=3.5, hits_for=19.0, hdc_for=10.5, mdc_for=14.0),
     "TOR": make_rates(goals_for=3.8, xg_for=3.3, hits_for=18.5, hdc_for=9.8, mdc_for=13.1),
-    "NSH": make_rates(goals_for=2.4, xg_for=2.3, hits_for=18.0, hdc_for=6.0, mdc_for=9.0),
-    "MIN": make_rates(goals_for=2.5, xg_for=2.4, hits_for=19.0, hdc_for=6.3, mdc_for=9.1),
-    "VGK": make_rates(goals_for=3.0, xg_for=2.8, hits_for=24.0, hdc_for=7.5, mdc_for=11.0),
-    "NYI": make_rates(goals_for=2.7, xg_for=2.6, hits_for=23.0, hdc_for=7.0, mdc_for=10.2),
-    "NYR": make_rates(goals_for=3.6, xg_for=2.8, hits_for=19.0, hdc_for=8.5, mdc_for=11.0),
+    
+    ##Meh
+    "NSH": make_rates(goals_for=2.4, xg_for=1.6, hits_for=18.0, hdc_for=6.0, mdc_for=5.0),
+    "MIN": make_rates(goals_for=6.5, xg_for=1.4, hits_for=15.0, hdc_for=6.3, mdc_for=5.0),
+    
+    ##Buzzin
+    "NYR": make_rates(goals_for=3.6, xg_for=2.8, hits_for=19.0, hdc_for=9.0, mdc_for=11.0),
     "SJS": make_rates(goals_for=3.3, xg_for=2.6, hits_for=18.0, hdc_for=7.0, mdc_for=10.2),
 }
 
@@ -70,15 +68,17 @@ def _team_rates_stub(monkeypatch):
     [
         ("EDM", "TOR", "Barn Burner"),
         ("NSH", "MIN", "Meh"),
-        ("VGK", "NYI", "Mid"),
         ("NYR", "SJS", "Buzzin"),
+        ("CBJ", "FLA", "Mid"),
     ],
 )
 def test_excitement_label_for_matchup(home, away, expected_label):
     rng = np.random.default_rng(12345)
     game = preview.simulate_preview(home, away, tv_broadcasts=[], n_sims=100, rng=rng)
-    score = calculate_excitement_score(game)["final_excitement_score"]
+    game_data = calculate_excitement_score(game)
+    score = game_data["final_excitement_score"]
     label = sort_excitement_score(score)
     print(f"{home} vs {away}: {score:.2f} -> {label}")
-    print(f"Actual {label} == Expected {expected_label}")
+    print(f"game:{game}")
+    print(f"data:{game_data}")
     assert label == expected_label

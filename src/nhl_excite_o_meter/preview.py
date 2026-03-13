@@ -6,7 +6,7 @@ import numpy as np
 
 from .teamrates import build_team_rates, get_expected_value
 
-from .preview_excitement_score import calculate_excitement_score, sort_excitement_score
+from .preview_excitement_score import calculate_excitement_score
 
 from .logging_config import setup_logging
 
@@ -178,7 +178,7 @@ def generate_game_preview(game_id):
     
     excitment_data = calculate_excitement_score(preview_data)
 
-    preview_data["excitement_level"] =  sort_excitement_score(excitment_data["final_excitement_score"])
+    preview_data["excitement_level"] =  excitment_data["excitement_level"]
     preview_data["excitement_score"] = excitment_data["final_excitement_score"]
     preview_data["excitement_modifiers"] = excitment_data["modifiers"]
     preview_data["excitement_makeup"] = excitment_data["excitement_makeup"]

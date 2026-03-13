@@ -11,15 +11,16 @@ ONE_GOAL_GAME_BONUS = 2.75
 TWO_GOAL_GAME_BONUS = 1.66
 GOALS_EXCITEMENT_THRESHOLD = 6.0
 GOALS_EXP_BASE = 1.40
-ICE_TILT_GOAL_THRESHOLD = 0.50
-ICE_TILT_GOAL_PENALTY_BASE = 1.25
-ICE_TILT_GOAL_PENALTY_DIFF_UNIT = 0.55
+
+ICE_TILT_GOAL_THRESHOLD = 1.3
+ICE_TILT_GOAL_PENALTY_BASE = 0.90
+
 LOW_SCORE_CLOSE_GAME_PENALTY = 0.50
 
 HDC_EXCITEMENT_THRESHOLD = 30
-HDC_WEIGHT = 0.35
+HDC_WEIGHT = 0.33
 MDC_WEIGHT = 0.25
-CHANCE_TILT_PERCENT = 66.0
+CHANCE_TILT_PERCENT = 90.0
 CHANCE_TILT_PENALTY = 0.90
 
 HIGH_HITS_THRESHOLD = 60
@@ -27,13 +28,13 @@ HIT_WEIGHT = .25
 
 ICE_TILT_PENALTY = 0.5
 
-XG_WEIGHT = .66
+XG_WEIGHT = .80
 
 TOTAL_GAME_TIME_SECONDS = 3600
 
-EXCITMENT_SCORE_MID_THRESHOLD = 33.20
-EXCITMENT_SCORE_BUZZIN_THRESHOLD = 35.55
-EXCITMENT_SCORE_BARN_BURNER_THRESHOLD = 39.10
+EXCITMENT_SCORE_MID_THRESHOLD = 18.20
+EXCITMENT_SCORE_BUZZIN_THRESHOLD = 28.25
+EXCITMENT_SCORE_BARN_BURNER_THRESHOLD = 36.53
 
 logging.basicConfig(
         level=logging.INFO,
@@ -63,8 +64,9 @@ def calculate_goal_score(home_goals, away_goals, total_goals):
     high_scoring_game = False
     ice_tilt = False
 
-    goal_diff = abs(home_goals - away_goals)
+    goal_diff = round(abs(home_goals - away_goals),2)
     logger.info(f"GOAL DIFF: {goal_diff}")
+    
     if total_goals >= GOALS_EXCITEMENT_THRESHOLD:
         high_scoring_game = True
     
@@ -72,14 +74,16 @@ def calculate_goal_score(home_goals, away_goals, total_goals):
     if goal_diff >= ICE_TILT_GOAL_THRESHOLD:
         # Scale penalty by how far the goal diff exceeds the threshold.
         ice_tilt = True
-        excess_diff = goal_diff - ICE_TILT_GOAL_THRESHOLD
-        scaled_excess_diff = excess_diff / ICE_TILT_GOAL_PENALTY_DIFF_UNIT
-        ice_tilt_penalty = pow(ICE_TILT_GOAL_PENALTY_BASE, -(scaled_excess_diff + 1))
-        goal_score = goal_score * ice_tilt_penalty
-        
-       
+        excess_diff =  ( goal_diff - ICE_TILT_GOAL_THRESHOLD )
+        if excess_diff == 0.0:
+            excess_diff = 1.0
 
-    return round(goal_score,2),high_scoring_game, ice_tilt
+        penalty = pow(ICE_TILT_GOAL_PENALTY_BASE ,excess_diff)
+        goal_score = goal_score * penalty 
+        
+    goal_score = round(goal_score,2)
+    logger.info(f"goal_score:{goal_score}")
+    return goal_score ,high_scoring_game, ice_tilt
 
 def calculate_close_game_score(period, period_time_remaining, is_game_over, home_goals, away_goals):
 
@@ -128,6 +132,7 @@ def calculate_chances_score(home_hdc, away_hdc, total_hdc):
 
     if ice_tilt:
         hdc_chances_score *= CHANCE_TILT_PENALTY
+        mdc_chances_score *= CHANCE_TILT_PENALTY
 
     chances_score = hdc_chances_score + mdc_chances_score
 
@@ -233,13 +238,14 @@ def calculate_excitement_score(game_data):
 
         final_excitement_score = close_game_score + chances_score + goals_score + xg_score + hit_score
         final_excitement_score = round(final_excitement_score/2,2) if modifiers["ice-tilt"]  else final_excitement_score
-        logger.info(f"Final Excitement Score: {final_excitement_score}")
+        excitement_level = sort_excitement_score(final_excitement_score)
+        logger.info(f"Final Excitement Score: {final_excitement_score}: {excitement_level}")
     
     else:
         logger.info(f"Game is too new to calculate excitement score. Seconds elapsed: {time_elapsed_seconds}")
 
     
-    excitement_data = {"final_excitement_score": final_excitement_score, "modifiers" : modifiers,"excitement_makeup": excitement_makeup}
+    excitement_data = {"final_excitement_score": final_excitement_score, "excitement_level":excitement_level, "modifiers" : modifiers,"excitement_makeup": excitement_makeup}
     
 
     return excitement_data
