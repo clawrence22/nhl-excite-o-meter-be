@@ -22,8 +22,8 @@ variable "vpc_id" {
   default     = ""
 }
 
-variable "private_app_subnet_ids" {
-  description = "Private app subnet IDs from network stack outputs."
+variable "public_subnet_ids" {
+  description = "Public subnet IDs from network stack outputs."
   type        = list(string)
   default     = []
 }

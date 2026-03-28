@@ -48,6 +48,11 @@ resource "aws_ecs_cluster" "main" {
   tags = local.tags
 }
 
+resource "aws_ecs_cluster_capacity_providers" "example" {
+  cluster_name = aws_ecs_cluster.main.name
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+}
+
 resource "aws_iam_role" "ecs_task_execution" {
   name = "${var.project_name}-ecs-task-exec-role"
 
@@ -198,8 +203,8 @@ resource "aws_ecs_task_definition" "app" {
 
   lifecycle {
     precondition {
-      condition     = var.vpc_id != "" && length(var.private_app_subnet_ids) > 0
-      error_message = "Set vpc_id and private_app_subnet_ids from network stack outputs."
+      condition     = var.vpc_id != "" && length(var.public_subnet_ids) > 0
+      error_message = "Set vpc_id and public_subnet_ids from network stack outputs."
     }
     precondition {
       condition     = var.db_secret_arn != ""
@@ -214,18 +219,32 @@ resource "aws_ecs_task_definition" "app" {
   tags = local.tags
 }
 
+
+
+
 resource "aws_ecs_service" "app" {
   name            = "${var.project_name}-service"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.ecs_desired_count
-  launch_type     = "FARGATE"
   enable_execute_command = true
 
+   capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    base = 0
+    weight = 0
+  }
+
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    base = 0
+    weight = 1
+  }
+
   network_configuration {
-    subnets          = var.private_app_subnet_ids
+    subnets          = var.public_subnet_ids
     security_groups  = [aws_security_group.ecs_service.id]
-    assign_public_ip = false
+    assign_public_ip = true
   }
 
   deployment_minimum_healthy_percent = 50

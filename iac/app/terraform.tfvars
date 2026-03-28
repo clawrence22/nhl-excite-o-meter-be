@@ -2,15 +2,13 @@ aws_region   = "us-east-1"
 project_name = "nhl-excite-o-meter-be"
 environment  = "prod"
 
-app_image = "871806636838.dkr.ecr.us-east-1.amazonaws.com/nhl-excit-o-meter-be:1.0.0"
+app_image = "871806636838.dkr.ecr.us-east-1.amazonaws.com/nhl-excit-o-meter-be:637d89724d35369e7f832e2008757b529d5d66af"
 flask_env = "production"
 
 # Required from network stack outputs
 vpc_id = "vpc-010c8bf40cdf46b38"
-private_app_subnet_ids = [
-  "subnet-09a2b7ffb189d3bf7",
-  "subnet-0de4c6f94d02724eb",
-]
+
+public_subnet_ids =["subnet-036d25c00629af481","subnet-0cc61dc319782a5dd",]
 # Optional from network stack output (for ECS Service Connect integration)
 service_connect_namespace_arn = "arn:aws:servicediscovery:us-east-1:871806636838:namespace/ns-6bvfavc37y2wydek"
 
