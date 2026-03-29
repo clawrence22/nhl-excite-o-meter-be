@@ -121,7 +121,9 @@ def create_app() -> Flask:
             for game_idf in future_ids:
                 game_data = preview.generate_game_preview(game_idf)
                 games_data[game_idf] = game_data
-
+            
+            logger.info(f"games_data:{games_data}")
+            
             return jsonify(games_data)   
         
         except Exception as e:
