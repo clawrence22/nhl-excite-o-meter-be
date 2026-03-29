@@ -115,13 +115,13 @@ def create_app() -> Flask:
                 if game_data is None:
                     logger.info(f"Game {game_id} not found in db, assuming future Game")
                     game_data = preview.generate_game_preview(game_id)
-                games_data[game_id] = game_data    
+                games_data[game_id] = game_data
+            except Exception as e:
+                logger.error(f"Error processing games for date {game_date}: {e}")
+                traceback.print_exc(limit=None, file=None, chain=True)
+                return jsonify({"error": "Internal error", "detail": str(e)}), 500
         return jsonify(games_data)
-        except Exception as e:
-            logger.error(f"Error processing games for date {game_date}: {e}")
-            traceback.print_exc(limit=None, file=None, chain=True)
-            return jsonify({"error": "Internal error", "detail": str(e)}), 500
-
+        
     @app.get("/excitement_game/<game_id>")
     def excitement_game(game_id: int):
         logger.info(f"Processing excitement for the game {game_id}")
