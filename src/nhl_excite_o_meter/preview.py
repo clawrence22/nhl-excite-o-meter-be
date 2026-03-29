@@ -29,7 +29,7 @@ def get_data_from_nhl(game_id):
     time_format = "%Y-%m-%dT%H:%M:%SZ"
     output_format = "%I:%M %p %Z"
 
-    naive_utc_dt = datetime.strptime(time_format, time_format)
+    naive_utc_dt = datetime.strptime(start_time, time_format)
 
     utc_dt = pytz.utc.localize(naive_utc_dt) 
 
