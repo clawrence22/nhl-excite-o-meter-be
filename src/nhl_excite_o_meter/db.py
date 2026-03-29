@@ -105,7 +105,9 @@ def get_game_data(game_id):
             WHERE id = {gameid}
         """).format(gameid=sql.Literal(game_id))
         cur.execute(fetch_sql)
-        game_data = cur.fetchone()
+        row = cur.fetchone()
+        
+        game_data = {k: v for k, v in row.items() if k != "id"}
 
         return game_data
     except Exception as e:
