@@ -9,6 +9,7 @@ from .teamrates import build_team_rates
 from .preview_excitement_score import calculate_excitement_score
 
 from .logging_config import setup_logging
+import pyzt
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -21,8 +22,23 @@ def get_data_from_nhl(game_id):
     home_tla = data["homeTeam"]["abbrev"]
     away_tla = data["awayTeam"]["abbrev"]
     tv_broadcasts = data["tvBroadcasts"]
+    start_time = data["startTimeUTC"]
+    2026-01-04T19:00:00Z
+    
+    time_format = "%Y-%m-%dT%H:%M:%SZ"
+    output_format = "%I:%M %p %Z"
 
-    return home_tla,away_tla,tv_broadcasts
+    naive_utc_dt = datetime.strptime(utc_string, time_format)
+
+    utc_dt = pytz.utc.localize(naive_utc_dt) 
+
+    est_timezone = pytz.timezone('America/New York')
+
+    est_dt = utc_dt.astimezone(est_timezone)
+    
+    start_time = est_dt.strftime(output_format)
+
+    return home_tla,away_tla,tv_broadcasts,start_time
 
 def get_game_ids(date):
     nhl_url = f"https://api-web.nhle.com/v1/schedule/{date}"
@@ -169,7 +185,7 @@ def generate_game_preview(game_id):
                   "TBL", "TOR", "UTA", "VAN", "VGK", 
                   "WPG", "WSH"]
     
-    home_tla,away_tla,tv_broadcasts = get_data_from_nhl(game_id)
+    home_tla,away_tla,tv_broadcasts,start_time = get_data_from_nhl(game_id)
 
     if home_tla not in team_tlas or away_tla not in team_tlas:
         return {}
@@ -182,5 +198,6 @@ def generate_game_preview(game_id):
     preview_data["excitement_score"] = excitment_data["final_excitement_score"]
     preview_data["excitement_modifiers"] = excitment_data["modifiers"]
     preview_data["excitement_makeup"] = excitment_data["excitement_makeup"]
+    preview_data["start_time"] = start_time
 
     return preview_data
