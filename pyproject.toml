@@ -13,7 +13,8 @@ dependencies = [
   "requests",
   "numpy",
   "boto3",
-  "pytest-json-ctrf"
+  "pytest-json-ctrf",
+  "pyzt"
 ]
 
 [tool.pytest.ini_options]
