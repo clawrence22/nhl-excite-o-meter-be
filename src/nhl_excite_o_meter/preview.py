@@ -11,7 +11,7 @@ from .teamrates import build_team_rates
 from .preview_excitement_score import calculate_excitement_score
 
 from .logging_config import setup_logging
-import pyzt
+import pytz
 
 setup_logging()
 logger = logging.getLogger(__name__)
