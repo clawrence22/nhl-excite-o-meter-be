@@ -31,6 +31,7 @@ from threading import Lock
 from typing import Any, Tuple
 import time
 import traceback
+import requests
 
 from flask import Flask, jsonify, request, make_response, g
 from flask_cors import CORS
@@ -38,6 +39,20 @@ from flask_cors import CORS
 from .logging_config import setup_logging
 from . import preview
 from . import db
+
+
+
+def get_game_ids(date):
+    nhl_url = f"https://api-web.nhle.com/v1/schedule/{date}"
+    response = requests.get(nhl_url)
+    data = response.json()
+    games = data["gameWeek"][0]["games"]
+
+    game_ids = []
+    for game in games:
+        game_ids.append(game["id"])
+
+    return game_ids
 
 def create_app() -> Flask:
     """Assemble the Flask API with shared dependencies.
@@ -91,12 +106,17 @@ def create_app() -> Flask:
     @app.get("/excitement_date/<game_date>")
     def excitement_date(game_date: str):
         logger.info(f"Processing excitement for the date {game_date}")
-        try:
-            games_data = db.get_date_games_data(game_date)
-            if games_data is None or len(games_data) == 0:
-                logger.info(f"Date {game_date} not found in db, assuming future date")
-                games_data = preview.generate_date_preview(game_date)
-            return jsonify(games_data)
+        game_ids = get_game_ids(game_date)
+        games_data = {}
+        for game_id in games_id:
+            game_data = {}
+            try:
+                game_data = db.get_date_games_data(game_date)
+                if game_data is None:
+                    logger.info(f"Game {game_id} not found in db, assuming future Game")
+                    game_data = preview.generate_game_preview(game_id)
+                games_data[game_id] = game_data    
+        return jsonify(games_data)
         except Exception as e:
             logger.error(f"Error processing games for date {game_date}: {e}")
             traceback.print_exc(limit=None, file=None, chain=True)
