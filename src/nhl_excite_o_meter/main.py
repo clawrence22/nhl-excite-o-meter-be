@@ -112,25 +112,25 @@ def create_app() -> Flask:
         future_ids,live_ids = get_game_ids(game_date)
         games_data = {}
         
-            try:
-                for game_id in live_ids:
-                    game_data = db.get_game_data(game_id)
-                    logger.info(f"LIVE {game_id}:{game_data}")
-                    games_data[game_id] = game_data
-                    
-                for game_idf in future_ids:
-                    game_data = preview.generate_game_preview(game_id)
-                    logger.info(f"{PREVIEW game_id}:{game_data}")
-                    games_data[game_id] = game_data
-                    
-            except Exception as e:
-                logger.error(f"Error processing games for date {game_date}: {e}")
-                traceback.print_exc(limit=None, file=None, chain=True)
-                return jsonify({"error": "Internal error", "detail": str(e)}), 500
+        try:
+            for game_id in live_ids:
+                game_data = db.get_game_data(game_id)
+                logger.info(f"LIVE {game_id}:{game_data}")
+                games_data[game_id] = game_data
+                
+            for game_idf in future_ids:
+                game_data = preview.generate_game_preview(game_id)
+                logger.info(f"{PREVIEW game_id}:{game_data}")
+                games_data[game_id] = game_data
+            
+            return jsonify(games_data)   
+        
+        except Exception as e:
+            logger.error(f"Error processing games for date {game_date}: {e}")
+            traceback.print_exc(limit=None, file=None, chain=True)
+            return jsonify({"error": "Internal error", "detail": str(e)}), 500)   
         
         
-        
-        return jsonify(games_data)
         
     @app.get("/excitement_game/<game_id>")
     def excitement_game(game_id: int):
