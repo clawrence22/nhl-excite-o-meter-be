@@ -108,7 +108,7 @@ def create_app() -> Flask:
         logger.info(f"Processing excitement for the date {game_date}")
         game_ids = get_game_ids(game_date)
         games_data = {}
-        for game_id in games_id:
+        for game_id in game_ids:
             game_data = {}
             try:
                 game_data = db.get_date_games_data(game_date)
