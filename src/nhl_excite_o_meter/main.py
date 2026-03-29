@@ -112,9 +112,8 @@ def create_app() -> Flask:
         future_ids,live_ids = get_game_ids(game_date)
         games_data = {}
         for game_id in live_ids:
-            game_data = {}
             try:
-                game_data = db.get_date_games_data(game_date)
+                game_data = db.get_game_data(game_id)
                 games_data[game_id] = game_data
             except Exception as e:
                 logger.error(f"Error processing games for date {game_date}: {e}")
