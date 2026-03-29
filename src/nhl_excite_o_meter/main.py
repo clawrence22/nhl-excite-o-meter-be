@@ -128,8 +128,7 @@ def create_app() -> Flask:
         except Exception as e:
             logger.error(f"Error processing games for date {game_date}: {e}")
             traceback.print_exc(limit=None, file=None, chain=True)
-            return jsonify({"error": "Internal error", "detail": str(e)}), 500)   
-        
+            return jsonify({"error": "Internal error", "detail": str(e)}), 500
         
         
     @app.get("/excitement_game/<game_id>")
