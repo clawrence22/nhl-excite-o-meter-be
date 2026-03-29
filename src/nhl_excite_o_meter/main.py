@@ -32,6 +32,7 @@ from typing import Any, Tuple
 import time
 import traceback
 import requests
+import json
 
 from flask import Flask, jsonify, request, make_response, g
 from flask_cors import CORS
@@ -121,7 +122,7 @@ def create_app() -> Flask:
                 game_data = preview.generate_game_preview(game_id)
                 games_data[game_id] = game_data
             
-            logger.info(jsonify(games_data))
+            logger.info(json.dumps(games_data, indent=2))
             return jsonify(games_data)   
         
         except Exception as e:
