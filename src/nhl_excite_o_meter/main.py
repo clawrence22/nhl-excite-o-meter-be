@@ -47,12 +47,12 @@ def get_game_ids(date):
     response = requests.get(nhl_url)
     data = response.json()
     games = data["gameWeek"][0]["games"]
+    
+    live_games = [game["id"] for game in games if (not is_game_future(game["game_state"]))]
+    future_games = [game["id"] for game in games if (is_game_future(game["game_state"]))]
+    
 
-    game_ids = []
-    for game in games:
-        game_ids.append(game["id"])
-
-    return game_ids
+    return (future_games,live_games)
 
 def create_app() -> Flask:
     """Assemble the Flask API with shared dependencies.
@@ -106,20 +106,22 @@ def create_app() -> Flask:
     @app.get("/excitement_date/<game_date>")
     def excitement_date(game_date: str):
         logger.info(f"Processing excitement for the date {game_date}")
-        game_ids = get_game_ids(game_date)
+        future_ids,live_ids = get_game_ids(game_date)
         games_data = {}
-        for game_id in game_ids:
+        for game_id in live_ids:
             game_data = {}
             try:
                 game_data = db.get_date_games_data(game_date)
-                if game_data is None:
-                    logger.info(f"Game {game_id} not found in db, assuming future Game")
-                    game_data = preview.generate_game_preview(game_id)
                 games_data[game_id] = game_data
             except Exception as e:
                 logger.error(f"Error processing games for date {game_date}: {e}")
                 traceback.print_exc(limit=None, file=None, chain=True)
                 return jsonify({"error": "Internal error", "detail": str(e)}), 500
+        
+        for game_idf in future_ids:
+            game_data = preview.generate_game_preview(game_id)
+            games_data[game_id] = game_data
+        
         return jsonify(games_data)
         
     @app.get("/excitement_game/<game_id>")
