@@ -66,7 +66,7 @@ def generate_date_preview(date):
     if len(preview_data) == 0:
         return {"000001":"No Games Today"}
 
-    logger.debug(f"preview_data:{preview_data}")
+    
     return preview_data
 
 def sort_broadcast_data(tv_broadcasts):
@@ -202,5 +202,7 @@ def generate_game_preview(game_id):
     preview_data["excitement_modifiers"] = excitment_data["modifiers"]
     preview_data["excitement_makeup"] = excitment_data["excitement_makeup"]
     preview_data["start_time"] = start_time
+    
+    logger.debug(f"preview_data:{preview_data}")
 
     return preview_data
