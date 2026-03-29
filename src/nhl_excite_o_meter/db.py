@@ -107,6 +107,10 @@ def get_game_data(game_id):
         cur.execute(fetch_sql)
         row = cur.fetchone()
         
+        if row is None:
+            logger.info(f"No game with id {game_id}. {str(row)}")
+            return {}
+        
         game_data = {k: v for k, v in row.items() if k != "id"}
 
         return game_data
