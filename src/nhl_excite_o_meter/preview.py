@@ -33,7 +33,7 @@ def get_data_from_nhl(game_id):
 
     utc_dt = pytz.utc.localize(naive_utc_dt) 
 
-    est_timezone = pytz.timezone('America/New York')
+    est_timezone = pytz.timezone('America/New_York')
 
     est_dt = utc_dt.astimezone(est_timezone)
     
