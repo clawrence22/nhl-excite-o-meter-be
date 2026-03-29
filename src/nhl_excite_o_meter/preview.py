@@ -2,6 +2,8 @@ import requests
 import logging
 from typing import Dict
 
+from datetime import datetime
+
 import numpy as np
 
 from .teamrates import build_team_rates
