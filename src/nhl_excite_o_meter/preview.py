@@ -174,7 +174,6 @@ def simulate_preview(
         "period": "Preview",
         "start_time" : start_time
     }
-    logger.debug("preview_data: %s", preview_data)
 
     return preview_data
 
