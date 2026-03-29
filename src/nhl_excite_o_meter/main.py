@@ -119,8 +119,8 @@ def create_app() -> Flask:
                 games_data[game_id] = game_data
                 
             for game_idf in future_ids:
-                game_data = preview.generate_game_preview(game_id)
-                games_data[game_id] = game_data
+                game_data = preview.generate_game_preview(game_idf)
+                games_data[game_idf] = game_data
 
             return jsonify(games_data)   
         
