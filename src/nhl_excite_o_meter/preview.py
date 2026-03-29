@@ -112,6 +112,7 @@ def simulate_preview(
     tv_broadcasts=None,
     lookback_games: int = 5,
     n_sims: int = 10000,
+    start_time = "Missing Start Time"
     rng=None,
 ) -> Dict:
     if rng is None:
@@ -171,6 +172,7 @@ def simulate_preview(
         "period_time_seconds": 3600,
         "is_game_over": False,
         "period": "Preview",
+        "start_time" : start_time
     }
     logger.debug("preview_data: %s", preview_data)
 
