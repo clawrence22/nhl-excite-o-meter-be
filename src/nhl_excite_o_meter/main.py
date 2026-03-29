@@ -40,7 +40,10 @@ from .logging_config import setup_logging
 from . import preview
 from . import db
 
+FUTURE_GAME_STATES = ["FUT", "PRE"]
 
+def is_game_future(game_state):
+    return (game_state in FUTURE_GAME_STATES)
 
 def get_game_ids(date):
     nhl_url = f"https://api-web.nhle.com/v1/schedule/{date}"
@@ -48,8 +51,8 @@ def get_game_ids(date):
     data = response.json()
     games = data["gameWeek"][0]["games"]
     
-    live_games = [game["id"] for game in games if (not is_game_future(game["game_state"]))]
-    future_games = [game["id"] for game in games if (is_game_future(game["game_state"]))]
+    live_games = [game["id"] for game in games if (not is_game_future(game["gameState"]))]
+    future_games = [game["id"] for game in games if (is_game_future(game["gameState"]))]
     
 
     return (future_games,live_games)
