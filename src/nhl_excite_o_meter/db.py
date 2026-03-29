@@ -97,7 +97,7 @@ def get_game_data(game_id):
             DB_PORT,
         )
         conn = _get_conn()
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
 
         fetch_sql = sql.SQL("""
             SELECT *
