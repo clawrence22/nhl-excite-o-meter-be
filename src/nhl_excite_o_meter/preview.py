@@ -112,7 +112,7 @@ def simulate_preview(
     tv_broadcasts=None,
     lookback_games: int = 5,
     n_sims: int = 10000,
-    start_time = "Missing Start Time"
+    start_time = "Missing Start Time",
     rng=None,
 ) -> Dict:
     if rng is None:
