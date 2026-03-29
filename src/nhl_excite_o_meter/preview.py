@@ -23,7 +23,6 @@ def get_data_from_nhl(game_id):
     away_tla = data["awayTeam"]["abbrev"]
     tv_broadcasts = data["tvBroadcasts"]
     start_time = data["startTimeUTC"]
-    2026-01-04T19:00:00Z
     
     time_format = "%Y-%m-%dT%H:%M:%SZ"
     output_format = "%I:%M %p %Z"
