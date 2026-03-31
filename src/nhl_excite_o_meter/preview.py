@@ -47,9 +47,7 @@ def get_game_ids(date):
     data = response.json()
     games = data["gameWeek"][0]["games"]
 
-    game_ids = []
-    for game in games:
-        game_ids.append(game["id"])
+    game_ids = [game["id"] for game in games ]
 
     return game_ids
 
