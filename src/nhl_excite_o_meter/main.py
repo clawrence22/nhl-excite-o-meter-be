@@ -41,22 +41,16 @@ from .logging_config import setup_logging
 from . import preview
 from . import db
 
-FUTURE_GAME_STATES = ["FUT", "PRE"]
-
-def is_game_future(game_state):
-    return (game_state in FUTURE_GAME_STATES)
-
 def get_game_ids(date):
     nhl_url = f"https://api-web.nhle.com/v1/schedule/{date}"
     response = requests.get(nhl_url)
     data = response.json()
     games = data["gameWeek"][0]["games"]
     
-    live_games = [game["id"] for game in games if (not is_game_future(game["gameState"]))]
-    future_games = [game["id"] for game in games if (is_game_future(game["gameState"]))]
+    game_ids = [game["id"] for game in games ]
     
 
-    return (future_games,live_games)
+    return (game_ids)
 
 def create_app() -> Flask:
     """Assemble the Flask API with shared dependencies.
@@ -110,17 +104,16 @@ def create_app() -> Flask:
     @app.get("/excitement_date/<game_date>")
     def excitement_date(game_date: str):
         logger.info(f"Processing excitement for the date {game_date}")
-        future_ids,live_ids = get_game_ids(game_date)
+        game_ids = get_game_ids(game_date)
         games_data = {}
         
         try:
-            for game_id in live_ids:
+            for game_id in game_ids:
                 game_data = db.get_game_data(game_id)
+                if game_data is None:
+                    logger.info(f"Game {game_id} not found in db, assuming future game, getting preview")
+                    game_data = preview.generate_game_preview(game_id)
                 games_data[game_id] = game_data
-                
-            for game_idf in future_ids:
-                game_data = preview.generate_game_preview(game_idf)
-                games_data[game_idf] = game_data
             
             logger.info(f"games_data:{games_data}")
             

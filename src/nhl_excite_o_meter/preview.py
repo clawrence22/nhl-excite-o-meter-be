@@ -123,12 +123,10 @@ def simulate_preview(
     
 
 
-    ##Sim how many goals,XG, hits and chances each team may get based on low,highs and avg
+    ##Sim how many goals, hits and chances each team may get based on low,highs and avg
 
     home_goals = get_random_poisson_value(home.goals_for, n_sims, rng=rng)
     away_goals = get_random_poisson_value(away.goals_for, n_sims, rng=rng)
-    home_xg = get_random_poisson_value(home.xg_for, n_sims, rng=rng)
-    away_xg = get_random_poisson_value(away.xg_for, n_sims, rng=rng)
 
     home_hdc = get_distributed_value(home.hdc_for, sims=n_sims, rng=rng)
     away_hdc = get_distributed_value(away.hdc_for, sims=n_sims, rng=rng)
@@ -143,12 +141,10 @@ def simulate_preview(
     away_hdc_mean = float(np.mean(away_hdc))
     away_hits_mean = float(np.mean(away_hits))
     away_mdc_mean = float(np.mean(away_mdc))
-    away_xg_mean = float(np.mean(away_xg))
     home_goals_mean = float(np.mean(home_goals))
     home_hdc_mean = float(np.mean(home_hdc))
     home_hits_mean = float(np.mean(home_hits))
     home_mdc_mean = float(np.mean(home_mdc))
-    home_xg_mean = float(np.mean(home_xg))
 
     preview_data = {
         "away_goals": round(away_goals_mean, 1),
@@ -156,19 +152,16 @@ def simulate_preview(
         "away_hits": round(away_hits_mean, 1),
         "away_mdc": round(away_mdc_mean, 1),
         "away_tla": away_tla,
-        "away_xg": round(away_xg_mean, 1),
         "home_goals": round(home_goals_mean, 1),
         "home_hdc": round(home_hdc_mean, 1),
         "home_hits": round(home_hits_mean, 1),
         "home_mdc": round(home_mdc_mean, 1),
         "home_tla": home_tla,
-        "home_xg": round(home_xg_mean, 1),
         "tv_broadcast": sort_broadcast_data(tv_broadcasts or []),
         "total_goals": round(away_goals_mean + home_goals_mean, 1),
         "total_hdc": round(away_hdc_mean + home_hdc_mean, 1),
         "total_hits": round(away_hits_mean + home_hits_mean, 1),
         "total_mdc": round(away_mdc_mean + home_mdc_mean, 1),
-        "total_xg": round(away_xg_mean + home_xg_mean, 1),
         "period_time_seconds": 3600,
         "is_game_over": False,
         "period": "Preview",

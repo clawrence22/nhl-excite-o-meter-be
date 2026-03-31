@@ -28,8 +28,6 @@ HIT_WEIGHT = .25
 
 ICE_TILT_PENALTY = 0.5
 
-XG_WEIGHT = .80
-
 TOTAL_GAME_TIME_SECONDS = 3600
 
 EXCITMENT_SCORE_MID_THRESHOLD = 18.20
@@ -148,9 +146,6 @@ def calculate_hits_score(total_hits):
     
     return round(hits_score,2) , high_hit_game
 
-def weight_xg(xg):
-    return ceil(round(xg/2, 2)) * XG_WEIGHT
-
 def calculate_game_elapsed(period, period_time_remaining):
     
     if period == "Preview" or period > 3:
@@ -188,7 +183,6 @@ def calculate_excitement_score(game_data):
     excitement_makeup = {
         "chance_score" : 0.0,
         "goal_score" : 0.0,
-        "xg_score" : 0.0,
         "hits_score" : 0.0
     }
 
@@ -206,15 +200,10 @@ def calculate_excitement_score(game_data):
         away_goals = game_data["away_goals"] * game_prorate_adjustment
         total_goals = game_data["total_goals"] * game_prorate_adjustment
 
-        home_xg = weight_xg(game_data["home_xg"] * game_prorate_adjustment)
-        away_xg = weight_xg(game_data["away_xg"] * game_prorate_adjustment)
-        total_xg = weight_xg(game_data["total_xg"] * game_prorate_adjustment)
-
         total_hits = game_data["total_hits"] * game_prorate_adjustment
 
         chances_score,frenzy_game,chances_ice_tilt = calculate_chances_score(home_hdc, away_hdc, total_hdc)
         goals_score,high_scoring_game,goals_ice_tilt = calculate_goal_score(home_goals, away_goals, total_goals)
-        xg_score,high_xg_game,xgoals_ice_tilt = calculate_goal_score(home_xg, away_xg, total_xg)
         hit_score,hit_fest_game = calculate_hits_score(total_hits)
         close_game_score,close_game,next_goal_wins = calculate_close_game_score(game_data["period"],game_data["period_time_seconds"],game_data["is_game_over"],home_goals,away_goals)
 
@@ -224,19 +213,17 @@ def calculate_excitement_score(game_data):
         "hit-fest" : hit_fest_game, 
         "frenzy" : frenzy_game,
         "next-goal-wins" : next_goal_wins,
-        "ice-tilt" : (chances_ice_tilt or goals_ice_tilt or xgoals_ice_tilt),
+        "ice-tilt" : (chances_ice_tilt or goals_ice_tilt),
         "chances_ice_tilt" : chances_ice_tilt,
         "goals_ice_tilt" : goals_ice_tilt,
-        "xgoals_ice_tilt": xgoals_ice_tilt
         }
 
         excitement_makeup["chance_score"] = chances_score
         excitement_makeup["goal_score"] = goals_score
-        excitement_makeup["xg_score"] = xg_score
         excitement_makeup["hits_score"] = hit_score
         excitement_makeup["close_game_score"] = close_game_score
 
-        final_excitement_score = close_game_score + chances_score + goals_score + xg_score + hit_score
+        final_excitement_score = close_game_score + chances_score + goals_score + hit_score
         final_excitement_score = round(final_excitement_score/2,2) if modifiers["ice-tilt"]  else final_excitement_score
         excitement_level = sort_excitement_score(final_excitement_score)
         logger.info(f"Final Excitement Score: {final_excitement_score}: {excitement_level}")

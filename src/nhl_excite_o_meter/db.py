@@ -109,7 +109,7 @@ def get_game_data(game_id):
         
         if row is None:
             logger.info(f"No game with id {game_id}. {str(row)}")
-            return {}
+            return None
         
         game_data = {k: v for k, v in row.items() if k != "id"}
 
@@ -204,7 +204,6 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             "WITH team_games AS ("
             "SELECT id, game_date, home_tla AS team_tla, "
             "home_goals AS goals_for, "
-            "home_xg AS xg_for, "
             "home_hits AS hits_for, "
             "home_hdc AS hdc_for, "
             "home_mdc AS mdc_for "
@@ -212,7 +211,6 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             "UNION ALL "
             "SELECT id, game_date, away_tla AS team_tla, "
             "away_goals AS goals_for, "
-            "away_xg AS xg_for, "
             "away_hits AS hits_for, "
             "away_hdc AS hdc_for, "
             "away_mdc AS mdc_for "
@@ -225,7 +223,6 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             ") "
             "SELECT "
             "AVG(goals_for)::float AS goals_for_avg, "
-            "AVG(xg_for)::float AS xg_for_avg, "
             "AVG(hits_for)::float AS hits_for_avg, "
             "AVG(hdc_for)::float AS hdc_for_avg, "
             "AVG(mdc_for)::float AS mdc_for_avg "
