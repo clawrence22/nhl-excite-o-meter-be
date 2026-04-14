@@ -3,9 +3,8 @@ import os
 import numpy as np
 import pytest
 
-from nhl_excite_o_meter import preview
-from nhl_excite_o_meter.teamrates import TeamRates
-from nhl_excite_o_meter.preview_excitement_score import (
+import backend.preview as preview
+from backend.preview import (
     calculate_excitement_score,
     sort_excitement_score,
 )
@@ -16,14 +15,16 @@ def make_rates(
     hits_for: float,
     hdc_for: float,
     mdc_for: float,
-) -> TeamRates:
-    # Keep low/high equal to average for deterministic testing.
-    return TeamRates(
-        goals_for=goals_for,
-        hits_for=hits_for,
-        hdc_for=hdc_for,
-        mdc_for=mdc_for
-    )
+    team_excitment_for: float
+) -> dict:
+    tmp_rate = {
+        "goals_for_avg" : goals_for,
+        "hits_for_avg" : hits_for,
+        "hdc_for_avg" : hdc_for,
+        "mdc_for_avg" : mdc_for,
+        "team_excitement_avg" : team_excitment_for
+    }
+    return tmp_rate
 
 
 PROFILES = {
@@ -72,7 +73,7 @@ def _team_rates_stub(monkeypatch):
 )
 def test_excitement_label_for_matchup(home, away, expected_label):
     rng = np.random.default_rng(12345)
-    game = preview.simulate_preview(home, away, tv_broadcasts=[], n_sims=100, rng=rng)
+    game = preview.simulate_preview(home, away)
     game_data = calculate_excitement_score(game)
     score = game_data["final_excitement_score"]
     label = sort_excitement_score(score)

@@ -37,9 +37,9 @@ import json
 from flask import Flask, jsonify, request, make_response, g
 from flask_cors import CORS
 
-from .logging_config import setup_logging
-from . import preview
-from . import db
+from logging_config import setup_logging
+import preview
+import db
 
 def get_game_ids(date):
     nhl_url = f"https://api-web.nhle.com/v1/schedule/{date}"

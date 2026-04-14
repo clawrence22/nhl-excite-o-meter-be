@@ -9,7 +9,7 @@ from psycopg2 import sql
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool
 
-from .logging_config import setup_logging
+from logging_config import setup_logging
 
 DB_HOST = os.environ["DB_HOST"]
 DB_PORT = int(os.environ["DB_PORT"])
@@ -17,7 +17,13 @@ DB_USER = os.environ["DB_USER"]
 DB_NAME = os.environ["DB_NAME"]
 DB_REGION = os.environ["DB_REGION"]
 DB_SSLMODE = os.environ["DB_SSLMODE"]
-
+DB_USE_IAM_AUTH = os.getenv("DB_USE_IAM_AUTH")
+DB_AUTH_HOST = os.getenv("DB_AUTH_HOST")
+DB_AUTH_PORT = os.getenv("DB_AUTH_PORT")
+if not DB_AUTH_HOST:
+    DB_AUTH_HOST = DB_HOST
+if not DB_AUTH_PORT:
+    DB_AUTH_PORT = int(DB_PORT)
 setup_logging()
 logger = logging.getLogger(__name__)
 
@@ -28,8 +34,8 @@ _POOL_LOCK = threading.Lock()
 def _get_password():
     client = boto3.client("rds", region_name=DB_REGION)
     return client.generate_db_auth_token(
-        DBHostname=DB_HOST,
-        Port=DB_PORT,
+        DBHostname=DB_AUTH_HOST,
+        Port=DB_AUTH_PORT,
         DBUsername=DB_USER,
         Region=DB_REGION,
     )
@@ -112,7 +118,7 @@ def get_game_data(game_id):
             return None
         
         game_data = {k: v for k, v in row.items() if k != "id"}
-
+        logger.info(f"DB RETURN game with id {game_id}:{game_data}")
         return game_data
     except Exception as e:
         logger.error("Error fetching game data: %s", e)
@@ -157,42 +163,6 @@ def get_team_data(team_tla):
         if conn:
             _put_conn(conn)
 
-def get_date_games_data(game_date):
-    conn = None
-    cur = None
-
-    try:
-        logger.info(
-            "Connecting to database %s at %s:%s (iam_auth=true)",
-            DB_NAME,
-            DB_HOST,
-            DB_PORT,
-        )
-        conn = _get_conn()
-        cur = conn.cursor()
-
-        fetch_sql = sql.SQL("""
-            SELECT *
-            FROM games
-            WHERE game_date = {gamedate}
-        """).format(gamedate=sql.Literal(game_date))
-        cur.execute(fetch_sql)
-        rows = cur.fetchall()
-        games_data = {}
-        for row in rows:
-            games_data[row["id"]] = {k: v for k, v in row.items() if k != "id"}
-
-        return games_data
-    except Exception as e:
-        logger.error("Error fetching games data: %s", e)
-        traceback.print_exc(limit=None, file=None, chain=True)
-        raise e
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            _put_conn(conn)
-
 def get_recent_team_stats(team_tla: str, lookback_games: int):
     conn = None
     cur = None
@@ -206,14 +176,16 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             "home_goals AS goals_for, "
             "home_hits AS hits_for, "
             "home_hdc AS hdc_for, "
-            "home_mdc AS mdc_for "
+            "home_mdc AS mdc_for, "
+            "home_excitement AS team_excitement " 
             "FROM public.games WHERE home_tla={team_tla} "
             "UNION ALL "
             "SELECT id, game_date, away_tla AS team_tla, "
             "away_goals AS goals_for, "
             "away_hits AS hits_for, "
             "away_hdc AS hdc_for, "
-            "away_mdc AS mdc_for "
+            "away_mdc AS mdc_for, "
+            "away_excitement AS team_excitement "
             "FROM public.games WHERE away_tla={team_tla}"
             "), "
             "recent_team_games AS ("
@@ -225,12 +197,21 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
             "AVG(goals_for)::float AS goals_for_avg, "
             "AVG(hits_for)::float AS hits_for_avg, "
             "AVG(hdc_for)::float AS hdc_for_avg, "
-            "AVG(mdc_for)::float AS mdc_for_avg "
+            "AVG(mdc_for)::float AS mdc_for_avg, "
+            "AVG(team_excitement)::float AS team_excitement_avg "
             "FROM recent_team_games"
         ).format(team_tla=sql.Literal(team_tla), game_limit=sql.Literal(lookback_games))
 
         cur.execute(select_team_games)
-        return cur.fetchone()
+
+        row = cur.fetchone()
+        
+        if row is None:
+            logger.info(f"No team with id {team_tla}. {str(row)}")
+            return None
+        team_data = {k: v for k, v in row.items()}
+
+        return team_data
     except Exception as e:
         logger.error("Error fetching recent team stats: %s", e)
         return None

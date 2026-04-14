@@ -8,9 +8,11 @@ services:
     container_name: excite_api
     ports:
       - "5001:5001"   # host:container
+    env_file: "local.env"
     environment:
-      # Set Flask to non-reloader mode inside container (we mount the code for live edits)
-      PYTHONUNBUFFERED: "1"
+      AWS_PROFILE: default
+    volumes:
+      - ${HOME}/.aws:/root/.aws:ro
     command: ["python", "main.py"]
     restart: unless-stopped
     networks:

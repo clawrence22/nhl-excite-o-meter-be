@@ -3,15 +3,13 @@ FROM python:latest
 
 # Set the working directory in the container
 WORKDIR /app
-ENV PYTHONPATH=/app/src
-# Copy project metadata and source for packaging
-COPY pyproject.toml .
-COPY src ./src
+# Copy the requirements file into the container
+COPY requirements.txt .
 
 # Install the required packages
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
-COPY . .
-EXPOSE 5001
-CMD ["python","-u","-m","nhl_excite_o_meter"]
+COPY backend .
+
+CMD ["python","-u","main.py"]
