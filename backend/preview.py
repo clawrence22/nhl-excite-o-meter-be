@@ -128,10 +128,10 @@ def simulate_preview(
 
     home_excitment_avg = home_avg["team_excitement_avg"]
     logger.info(f"home_excitment_avg:{home_excitment_avg}")
-    home_team_level = sort_excitement_score(home_excitment_avg)
+    home_excitement_level = sort_excitement_score(home_excitment_avg)
     
     away_excitment_avg = away_avg["team_excitement_avg"]
-    away_team_level = sort_excitement_score(away_excitment_avg)
+    away_excitement_level = sort_excitement_score(away_excitment_avg)
 
 
     raw_excitment_score = calculate_excitement_score(home_excitment_avg,away_excitment_avg)
@@ -144,13 +144,13 @@ def simulate_preview(
         "away_hits": round(away_avg["hits_for_avg"], 0),
         "away_mdc": round(away_avg["mdc_for_avg"], 0),
         "away_excitement": round(away_excitment_avg, 2),
-        "away_team_level": away_team_level,
+        "away_excitement_level": away_excitement_level,
         "home_goals": round(home_avg["goals_for_avg"], 0),
         "home_hdc": round(home_avg["hdc_for_avg"], 0),
         "home_hits": round(home_avg["hits_for_avg"], 0),
         "home_mdc": round(home_avg["mdc_for_avg"], 0),
         "home_excitement": round(home_excitment_avg, 2),
-        "home_team_level": home_team_level,
+        "home_excitement_level": home_excitement_level,
         "is_game_over": False,
         "period": "Preview",
         "excitement_level": excitement_level,
