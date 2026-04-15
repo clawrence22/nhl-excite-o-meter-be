@@ -229,7 +229,7 @@ resource "aws_ecs_service" "app" {
   desired_count   = var.ecs_desired_count
   enable_execute_command = true
 
-   capacity_provider_strategy {
+  capacity_provider_strategy {
     capacity_provider = "FARGATE"
     base = 0
     weight = 0
