@@ -46,11 +46,20 @@ def get_game_ids(date):
     response = requests.get(nhl_url)
     data = response.json()
     games = data["gameWeek"][0]["games"]
+
+    games_playoffs = {}
     
-    game_ids = [game["id"] for game in games ]
+    for game in games:
+        logging.info(f"{game['id']} Playoffs? {game['seriesStatus'] if "seriesStatus" in game.keys() else 'N/A'}")
+        games_playoffs[game["id"]] = game["seriesStatus"]  if "seriesStatus" in game.keys() else {}
     
 
-    return (game_ids)
+    return games_playoffs
+
+def get_playoff_data(game_id,date):
+    dates_games = get_game_ids(date)
+    logging.info(f"Looking for playoff data for game {game_id} in date {date}, found {dates_games}")
+    return dates_games[game_id]
 
 def create_app() -> Flask:
     """Assemble the Flask API with shared dependencies.
@@ -104,15 +113,15 @@ def create_app() -> Flask:
     @app.get("/excitement_date/<game_date>")
     def excitement_date(game_date: str):
         logger.info(f"Processing excitement for the date {game_date}")
-        game_ids = get_game_ids(game_date)
+        games = get_game_ids(game_date)
         games_data = {}
         
         try:
-            for game_id in game_ids:
+            for game_id,playoffData in games.items():
                 game_data = db.get_game_data(game_id)
                 if game_data is None:
-                    logger.info(f"Game {game_id} not found in db, assuming future game, getting preview")
-                    game_data = preview.generate_game_preview(game_id)
+                    logger.info(f"Game {game_id} not found in db, assuming future game, getting preview {playoffData}")
+                    game_data = preview.generate_game_preview(game_id,playoffData,game_date)
                 games_data[game_id] = game_data
             
             logger.info(f"games_data:{games_data}")
@@ -125,14 +134,17 @@ def create_app() -> Flask:
             return jsonify({"error": "Internal error", "detail": str(e)}), 500
         
         
-    @app.get("/excitement_game/<game_id>")
-    def excitement_game(game_id: int):
-        logger.info(f"Processing excitement for the game {game_id}")
+    @app.get("/excitement_game")
+    def excitement_game():
+        game_id = int(request.args.get('id'))
+        game_date = request.args.get('date')
+        logger.info(f"Processing excitement for the game {game_id}, date {game_date}")
         try:
             game_data = db.get_game_data(game_id)
             if game_data is None:
-                logger.info(f"Game {game_id} not found in db, assuming future game, getting preview")
-                game_data = preview.generate_game_preview(game_id)
+                playoff_data = get_playoff_data(game_id,game_date)
+                logger.info(f"Game {game_id} not found in db, assuming future game, getting preview {playoff_data}")
+                game_data = preview.generate_game_preview(game_id,playoffData=playoff_data,game_date=game_date)
             
             return jsonify(game_data)
         except Exception as e:

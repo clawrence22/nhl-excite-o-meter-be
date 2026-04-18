@@ -160,7 +160,7 @@ def simulate_preview(
     return preview_data
 
 
-def generate_game_preview(game_id):
+def generate_game_preview(game_id,playoffData,game_date = ""):
     team_tlas = [ "ANA", "BOS", "BUF", "CAR", "CBJ",
                   "CGY", "CHI", "COL", "DAL", "DET", 
                   "EDM", "FLA", "LAK", "MIN", "MTL", 
@@ -186,6 +186,24 @@ def generate_game_preview(game_id):
     preview_data["away_tla"] = away_tla
     preview_data["tv_broadcast"] = sort_broadcast_data(tv_broadcasts)
     preview_data["start_time"] = start_time
+    preview_data["game_date"] = game_date
+
+    playoff_data = {}
+
+    if playoffData != {}:
+        playoff_data["is_playoff"] = True
+        playoff_data["game_seven"] = (playoffData["gameNumberOfSeries"] == 7)
+        playoff_data["elimination_game"] = (playoffData["topSeedWins"] == 3 or playoffData["bottomSeedWins"] == 3 )
+        playoff_data["cup_final"] = (playoffData["round"] == 4)
+    else:
+        playoff_data["is_playoff"] = False
+        playoff_data["game_seven"] = False
+        playoff_data["elimination_game"] = False
+        playoff_data["cup_final"] = False
+    
+    preview_data["playoffs"] = playoff_data
+    preview_data["playoffs"]["data"] = playoffData
+    preview_data["excitement_modifiers"] = {}
     
     logger.debug(f"preview_data:{preview_data}")
 
