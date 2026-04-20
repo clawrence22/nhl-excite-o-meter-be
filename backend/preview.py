@@ -20,30 +20,23 @@ MID_THRESHOLD_NORMAL = 25
 BUZZ_THRESHOLD_NORMAL = 50.00
 BURNER_THRESHOLD_NORMAL = 75.00
 
+
 def get_data_from_nhl(game_id):
     logger.info(f"Getting teams for game {game_id}")
     nhl_url = f"https://api-web.nhle.com/v1/gamecenter/{game_id}/play-by-play"
     response = requests.get(nhl_url)
     data = response.json()
-    home_tla = data["homeTeam"]["abbrev"]
-    away_tla = data["awayTeam"]["abbrev"]
-    tv_broadcasts = data["tvBroadcasts"]
-    start_time = data["startTimeUTC"]
-    
-    time_format = "%Y-%m-%dT%H:%M:%SZ"
-    output_format = "%I:%M %p %Z"
 
-    naive_utc_dt = datetime.strptime(start_time, time_format)
+    nhl_data = {
+        "home_tla": data["homeTeam"]["abbrev"],
+        "away_tla": data["awayTeam"]["abbrev"],
+        "home_team_name": data["homeTeam"]["commonName"]["default"],
+        "away_team_name": data["awayTeam"]["commonName"]["default"],
+        "tv_broadcasts": data["tvBroadcasts"],
+        "start_time_utc": data["startTimeUTC"]
+    }
 
-    utc_dt = pytz.utc.localize(naive_utc_dt) 
-
-    est_timezone = pytz.timezone('America/New_York')
-
-    est_dt = utc_dt.astimezone(est_timezone)
-    
-    start_time = est_dt.strftime(output_format)
-
-    return home_tla,away_tla,tv_broadcasts,start_time
+    return nhl_data
 
 def get_game_ids(date):
     nhl_url = f"https://api-web.nhle.com/v1/schedule/{date}"
@@ -169,23 +162,27 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
                   "TBL", "TOR", "UTA", "VAN", "VGK", 
                   "WPG", "WSH"]
     
-    home_tla,away_tla,tv_broadcasts,start_time = get_data_from_nhl(game_id)
+    nhl_data = get_data_from_nhl(game_id)
 
-    if home_tla not in team_tlas or away_tla not in team_tlas:
+    if nhl_data["home_tla"] not in team_tlas or nhl_data["away_tla"] not in team_tlas:
         return {}
     try:
-        home_team_avg = db.get_recent_team_stats(home_tla,10)
-        away_team_avg = db.get_recent_team_stats(away_tla,10)
+        series_avg = db.get_series_average(nhl_data["home_tla"], nhl_data["away_tla"], 5)
+        home_team_avg = series_avg.get(nhl_data["home_tla"])
+        away_team_avg = series_avg.get(nhl_data["away_tla"])
     except Exception as ex:
         logger.error(f"Error Getting team stats:{ex}")
         raise ex
-
+    logger.info(f"home_team_avg:{home_team_avg}")
+    logger.info(f"away_team_avg:{away_team_avg}")
     preview_data = simulate_preview(home_team_avg,away_team_avg)
 
-    preview_data["home_tla"] = home_tla
-    preview_data["away_tla"] = away_tla
-    preview_data["tv_broadcast"] = sort_broadcast_data(tv_broadcasts)
-    preview_data["start_time"] = start_time
+    preview_data["home_tla"] = nhl_data["home_tla"]
+    preview_data["away_tla"] = nhl_data["away_tla"]
+    preview_data["home_team_name"] = nhl_data["home_team_name"]
+    preview_data["away_team_name"] = nhl_data["away_team_name"]
+    preview_data["tv_broadcast"] = sort_broadcast_data(nhl_data["tv_broadcasts"])
+    preview_data["start_time"] = nhl_data["start_time_utc"]
     preview_data["game_date"] = game_date
 
     playoff_data = {}

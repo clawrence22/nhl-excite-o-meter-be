@@ -40,6 +40,7 @@ from flask_cors import CORS
 from logging_config import setup_logging
 import preview
 import db
+import pytz
 
 def get_game_ids(date):
     nhl_url = f"https://api-web.nhle.com/v1/schedule/{date}"
@@ -112,6 +113,8 @@ def create_app() -> Flask:
 
     @app.get("/excitement_date/<game_date>")
     def excitement_date(game_date: str):
+
+
         logger.info(f"Processing excitement for the date {game_date}")
         games = get_game_ids(game_date)
         games_data = {}
@@ -122,6 +125,9 @@ def create_app() -> Flask:
                 if game_data is None:
                     logger.info(f"Game {game_id} not found in db, assuming future game, getting preview {playoffData}")
                     game_data = preview.generate_game_preview(game_id,playoffData,game_date)
+                else:
+                    logger.info(f"Game {game_id} found in db, using existing data")
+                    game_data["start_time" ] = game_data["start_time_utc"]
                 games_data[game_id] = game_data
             
             logger.info(f"games_data:{games_data}")

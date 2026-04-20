@@ -163,7 +163,7 @@ def get_team_data(team_tla):
         if conn:
             _put_conn(conn)
 
-def get_recent_team_stats(team_tla: str, lookback_games: int):
+def get_series_average(home_tla: str, away_tla: str, lookback_games: int):
     conn = None
     cur = None
     try:
@@ -171,50 +171,47 @@ def get_recent_team_stats(team_tla: str, lookback_games: int):
         cur = conn.cursor()
 
         select_team_games = sql.SQL(
-            "WITH team_games AS ("
-            "SELECT id, game_date, home_tla AS team_tla, "
-            "home_goals AS goals_for, "
-            "home_hits AS hits_for, "
-            "home_hdc AS hdc_for, "
-            "home_mdc AS mdc_for, "
-            "home_excitement AS team_excitement " 
-            "FROM public.games WHERE home_tla={team_tla} "
+            "WITH series_games AS ("
+            "SELECT id, home_tla AS team_tla, "
+            "home_goals AS goals_for, home_hits AS hits_for, "
+            "home_hdc AS hdc_for, home_mdc AS mdc_for, home_excitement AS team_excitement "
+            "FROM public.games WHERE home_tla={home_tla} AND away_tla={away_tla} "
             "UNION ALL "
-            "SELECT id, game_date, away_tla AS team_tla, "
-            "away_goals AS goals_for, "
-            "away_hits AS hits_for, "
-            "away_hdc AS hdc_for, "
-            "away_mdc AS mdc_for, "
-            "away_excitement AS team_excitement "
-            "FROM public.games WHERE away_tla={team_tla}"
+            "SELECT id, away_tla AS team_tla, "
+            "away_goals AS goals_for, away_hits AS hits_for, "
+            "away_hdc AS hdc_for, away_mdc AS mdc_for, away_excitement AS team_excitement "
+            "FROM public.games WHERE home_tla={home_tla} AND away_tla={away_tla}"
             "), "
-            "recent_team_games AS ("
-            "SELECT * FROM team_games "
-            "ORDER BY id DESC "
-            "LIMIT {game_limit}"
+            "recent_ids AS ("
+            "SELECT DISTINCT id FROM series_games ORDER BY id DESC LIMIT {game_limit}"
             ") "
-            "SELECT "
+            "SELECT team_tla, "
             "AVG(goals_for)::float AS goals_for_avg, "
             "AVG(hits_for)::float AS hits_for_avg, "
             "AVG(hdc_for)::float AS hdc_for_avg, "
             "AVG(mdc_for)::float AS mdc_for_avg, "
             "AVG(team_excitement)::float AS team_excitement_avg "
-            "FROM recent_team_games"
-        ).format(team_tla=sql.Literal(team_tla), game_limit=sql.Literal(lookback_games))
+            "FROM series_games WHERE id IN (SELECT id FROM recent_ids) "
+            "GROUP BY team_tla"
+        ).format(
+            home_tla=sql.Literal(home_tla),
+            away_tla=sql.Literal(away_tla),
+            game_limit=sql.Literal(lookback_games)
+        )
 
         cur.execute(select_team_games)
+        rows = cur.fetchall()
 
-        row = cur.fetchone()
-        
-        if row is None:
-            logger.info(f"No team with id {team_tla}. {str(row)}")
-            return None
-        team_data = {k: v for k, v in row.items()}
+        logger.info(f"DB RETURN series average for {home_tla} vs {away_tla} with lookback {lookback_games}:{rows}")
 
-        return team_data
+        if not rows:
+            logger.info(f"No series games found between {home_tla} and {away_tla}")
+            return {}
+
+        return {row["team_tla"]: dict(row) for row in rows}
     except Exception as e:
-        logger.error("Error fetching recent team stats: %s", e)
-        return None
+        logger.error("Error fetching series average: %s", e)
+        return {}
     finally:
         if cur:
             cur.close()
