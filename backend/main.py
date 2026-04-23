@@ -127,7 +127,7 @@ def create_app() -> Flask:
                     game_data = preview.generate_game_preview(game_id,playoffData,game_date)
                 else:
                     logger.info(f"Game {game_id} found in db, using existing data")
-                    game_data["start_time" ] = game_data["start_time_utc"]
+                    game_data["start_time" ] = game_data["game"]["start_time_utc"]
                 games_data[game_id] = game_data
             
             logger.info(f"games_data:{games_data}")
