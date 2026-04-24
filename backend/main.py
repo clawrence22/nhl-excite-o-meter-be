@@ -123,8 +123,10 @@ def create_app() -> Flask:
             for game_id,playoffData in games.items():
                 game_data = db.get_game_data(game_id)
                 if game_data is None:
-                    logger.info(f"Game {game_id} not found in db, assuming future game, getting preview {playoffData}")
-                    game_data = preview.generate_game_preview(game_id,playoffData,game_date)
+                    # logger.info(f"Game {game_id} not found in db, assuming future game, getting preview {playoffData}")
+                    # game_data = preview.generate_game_preview(game_id,playoffData,game_date)
+                    logger.info(f"Game {game_id} not found in db, skipping...")
+                    continue
                 else:
                     logger.info(f"Game {game_id} found in db, using existing data")
                     game_data["start_time" ] = game_data["game"]["start_time_utc"]
