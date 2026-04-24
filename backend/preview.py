@@ -13,12 +13,15 @@ import numpy as np
 setup_logging()
 logger = logging.getLogger(__name__)
 
-GAME_EXCITEMENT_SCORE_LEVELS = [10, 25.0, 40.0, 54.25]
-TEAM_EXCITEMENT_SCORE_LEVELS = [0 ,4.80,6.00, 8.00]
 
-MID_THRESHOLD_NORMAL = 25
-BUZZ_THRESHOLD_NORMAL = 50.00
-BURNER_THRESHOLD_NORMAL = 75.00
+AVG_GAME_BUMP = 1.40
+
+GAME_EXCITEMENT_SCORE_LEVELS = [5, 8.0, 18.0, 25.0, 30.0]
+TEAM_EXCITEMENT_SCORE_LEVELS = [0 ,4.80,6.00, 8.00,10.00]
+
+MID_THRESHOLD_NORMAL = 33.00
+BUZZ_THRESHOLD_NORMAL = 66.00
+BURNER_THRESHOLD_NORMAL = 80.00
 
 
 def get_data_from_nhl(game_id):
@@ -71,7 +74,7 @@ def normalize_score(score,thresholds):
 
     # 2. Define the target normalized mapping for each threshold
     # Here, each threshold is mapped to an equal step (0, 0.25, 0.5, 0.75, 1.0)
-    fp = [10,MID_THRESHOLD_NORMAL, BUZZ_THRESHOLD_NORMAL, BURNER_THRESHOLD_NORMAL]
+    fp = [10,MID_THRESHOLD_NORMAL, BUZZ_THRESHOLD_NORMAL, BURNER_THRESHOLD_NORMAL,100]
 
     # 3. Perform piecewise interpolation
     normalized_values = np.interp([score], xp, fp)
@@ -92,23 +95,9 @@ def sort_excitement_score(excitement_score):
     else:
         return "Too Early"
 
-def calculate_excitement_score(home_team_excitement,away_team_excitement):
+def calculate_excitement_score(home_team_excitement,away_team_excitement):    
+    return ((home_team_excitement + away_team_excitement)) * AVG_GAME_BUMP
 
-    TILT_PERCENT = 0.95
-    TILT_PENALTY = 0.90
-
-    avg_game_bump = 1.00
-    raw_score = ((home_team_excitement + away_team_excitement)/2) * avg_game_bump
-
-    home_per = home_team_excitement/raw_score
-    away_per = away_team_excitement/raw_score
-
-    potential_ice_tilt = (home_per > TILT_PERCENT or away_per > TILT_PERCENT)
-
-    if potential_ice_tilt:
-        raw_score *= TILT_PENALTY 
-
-    return raw_score
 
 
 def simulate_preview(
@@ -119,36 +108,34 @@ def simulate_preview(
     logger.info(f"home_avg:{home_avg}")
     logger.info(f"away_avg:{away_avg}")
 
-    home_excitment_avg = home_avg["team_excitement_avg"]
+    home_excitment_avg = home_avg["excitement_avg"]
+    home_excitment_norm = normalize_score(home_excitment_avg, TEAM_EXCITEMENT_SCORE_LEVELS)
     logger.info(f"home_excitment_avg:{home_excitment_avg}")
-    home_excitement_level = sort_excitement_score(home_excitment_avg)
-    
-    away_excitment_avg = away_avg["team_excitement_avg"]
-    away_excitement_level = sort_excitement_score(away_excitment_avg)
+    home_excitement_level = sort_excitement_score(home_excitment_norm)
 
+    home_team_excitement = {"raw_excitement_score": home_excitment_avg, "excitement_score": home_excitment_norm,"excitement_level":home_excitement_level,"goal_score": 0.0,"hdc_score": 0.0, "mdc_score": 0.0}
+    
+    away_excitment_avg = away_avg["excitement_avg"]
+    away_excitment_norm = normalize_score(home_excitment_avg, TEAM_EXCITEMENT_SCORE_LEVELS)
+    away_excitement_level = sort_excitement_score(away_excitment_norm)
+
+    away_team_excitement = {"raw_excitement_score": away_excitment_avg, "excitement_score": away_excitment_norm,"excitement_level":away_excitement_level,"goal_score": 0.0,"hdc_score": 0.0, "mdc_score": 0.0}
 
     raw_excitment_score = calculate_excitement_score(home_excitment_avg,away_excitment_avg)
     excitment_score = normalize_score(raw_excitment_score,GAME_EXCITEMENT_SCORE_LEVELS)
     excitement_level = sort_excitement_score(excitment_score)
 
+    game_excitement = {"excitement_score":excitment_score,"excitement_level":excitement_level,"raw_score":raw_excitment_score}
+
     preview_data = {
-        "away_goals": round(away_avg["goals_for_avg"], 0),
-        "away_hdc": round(away_avg["hdc_for_avg"], 0),
-        "away_hits": round(away_avg["hits_for_avg"], 0),
-        "away_mdc": round(away_avg["mdc_for_avg"], 0),
-        "away_excitement": round(away_excitment_avg, 2),
-        "away_excitement_level": away_excitement_level,
-        "home_goals": round(home_avg["goals_for_avg"], 0),
-        "home_hdc": round(home_avg["hdc_for_avg"], 0),
-        "home_hits": round(home_avg["hits_for_avg"], 0),
-        "home_mdc": round(home_avg["mdc_for_avg"], 0),
-        "home_excitement": round(home_excitment_avg, 2),
-        "home_excitement_level": home_excitement_level,
-        "is_game_over": False,
-        "period": "Preview",
-        "excitement_level": excitement_level,
-        "excitement_score": excitment_score,
-        "raw_excitment_score":raw_excitment_score
+        "home": {"hdc": round(home_avg["hdc_avg"], 0), "mdc": round(home_avg["mdc_avg"], 0), 
+                 "goals": round(home_avg["goals_avg"], 0), "hits": round(home_avg["hits_avg"], 0),
+                 "ovr_excitment" :home_team_excitement,"five_min_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} },
+        "away": {"hdc": round(away_avg["hdc_avg"], 0), "mdc": round(away_avg["mdc_avg"], 0), 
+                 "goals": round(away_avg["goals_avg"], 0), "hits": round(away_avg["hits_avg"], 0),
+                 "ovr_excitment" :away_team_excitement,"five_min_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"}  },
+        
+        "game": { "ovr_excitment":game_excitement , "five_min_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} }
     }
     return preview_data
 
@@ -167,7 +154,8 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
     if nhl_data["home_tla"] not in team_tlas or nhl_data["away_tla"] not in team_tlas:
         return {}
     try:
-        series_avg = db.get_series_average(nhl_data["home_tla"], nhl_data["away_tla"], 5)
+        num_games_series = 5 if playoffData == None else (playoffData["gameNumberOfSeries"] - 1)
+        series_avg = db.get_series_average(nhl_data["home_tla"], nhl_data["away_tla"], num_games_series)
         home_team_avg = series_avg.get(nhl_data["home_tla"])
         away_team_avg = series_avg.get(nhl_data["away_tla"])
     except Exception as ex:
@@ -177,30 +165,34 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
     logger.info(f"away_team_avg:{away_team_avg}")
     preview_data = simulate_preview(home_team_avg,away_team_avg)
 
-    preview_data["home_tla"] = nhl_data["home_tla"]
-    preview_data["away_tla"] = nhl_data["away_tla"]
-    preview_data["home_team_name"] = nhl_data["home_team_name"]
-    preview_data["away_team_name"] = nhl_data["away_team_name"]
-    preview_data["tv_broadcast"] = sort_broadcast_data(nhl_data["tv_broadcasts"])
-    preview_data["start_time"] = nhl_data["start_time_utc"]
-    preview_data["game_date"] = game_date
+    preview_data["home"]["tla"] = nhl_data["home_tla"]
+    preview_data["home"]["name"] = nhl_data["home_team_name"]
+    preview_data["away"]["tla"] = nhl_data["away_tla"]
+    preview_data["away"]["name"] = nhl_data["away_team_name"]
+
+    preview_data["game"]["tv_broadcast"] = sort_broadcast_data(nhl_data["tv_broadcasts"])
+    preview_data["game"]["start_time"] = nhl_data["start_time_utc"]
+    preview_data["game"]["game_date"] = game_date
+    preview_data["game"]["period"] = "Preview"
+    preview_data["game"]["is_game_over"] = False
 
     playoff_data = {}
 
-    if playoffData != {}:
-        playoff_data["is_playoff"] = True
-        playoff_data["game_seven"] = (playoffData["gameNumberOfSeries"] == 7)
-        playoff_data["elimination_game"] = (playoffData["topSeedWins"] == 3 or playoffData["bottomSeedWins"] == 3 )
-        playoff_data["cup_final"] = (playoffData["round"] == 4)
-    else:
+    if playoffData is None:
         playoff_data["is_playoff"] = False
         playoff_data["game_seven"] = False
         playoff_data["elimination_game"] = False
         playoff_data["cup_final"] = False
+    else:
+        playoff_data["is_playoff"] = True
+        playoff_data["game_seven"] = (playoffData["gameNumberOfSeries"] == 7)
+        playoff_data["elimination_game"] = (playoffData["topSeedWins"] == 3 or playoffData["bottomSeedWins"] == 3 )
+        playoff_data["cup_final"] = (playoffData["round"] == 4)
+       
     
     preview_data["playoffs"] = playoff_data
     preview_data["playoffs"]["data"] = playoffData
-    preview_data["excitement_modifiers"] = {}
+    preview_data["excitement"] = {"modifiers": {}, "bonuses": {"avg_game_bump": AVG_GAME_BUMP}}
     
     logger.debug(f"preview_data:{preview_data}")
 

@@ -52,7 +52,7 @@ def get_game_ids(date):
     
     for game in games:
         logging.info(f"{game['id']} Playoffs? {game['seriesStatus'] if "seriesStatus" in game.keys() else 'N/A'}")
-        games_playoffs[game["id"]] = game["seriesStatus"]  if "seriesStatus" in game.keys() else {}
+        games_playoffs[game["id"]] = game["seriesStatus"]  if "seriesStatus" in game.keys() else None
     
 
     return games_playoffs
@@ -79,8 +79,7 @@ def create_app() -> Flask:
         "http://localhost:3000",
     }
 
-    db.init_db_pool()
-    atexit.register(db.close_db_pool)
+    db.init_db()
 
     @app.after_request
     def add_cors_headers(resp):
@@ -123,18 +122,16 @@ def create_app() -> Flask:
             for game_id,playoffData in games.items():
                 game_data = db.get_game_data(game_id)
                 if game_data is None:
-                    # logger.info(f"Game {game_id} not found in db, assuming future game, getting preview {playoffData}")
-                    # game_data = preview.generate_game_preview(game_id,playoffData,game_date)
-                    logger.info(f"Game {game_id} not found in db, skipping...")
-                    continue
+                    logger.info(f"Game {game_id} not found in db, assuming future game, getting preview....")
+                    game_data = preview.generate_game_preview(game_id,playoffData,game_date)
                 else:
                     logger.info(f"Game {game_id} found in db, using existing data")
-                    game_data["start_time" ] = game_data["game"]["start_time_utc"]
+                logger.info(f"Adding game {game_id} to response {game_data}" )
                 games_data[game_id] = game_data
             
             logger.info(f"games_data:{games_data}")
             
-            return jsonify(games_data)   
+            return jsonify(games_data)
         
         except Exception as e:
             logger.error(f"Error processing games for date {game_date}: {e}")
