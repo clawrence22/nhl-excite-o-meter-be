@@ -175,6 +175,7 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
     preview_data["game"]["game_date"] = game_date
     preview_data["game"]["period"] = "Preview"
     preview_data["game"]["is_game_over"] = False
+    preview_data["game"]["intermission"] = False
 
     playoff_data = {}
 
