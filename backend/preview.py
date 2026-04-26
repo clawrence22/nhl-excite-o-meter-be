@@ -130,12 +130,12 @@ def simulate_preview(
     preview_data = {
         "home": {"hdc": round(home_avg["hdc_avg"], 0), "mdc": round(home_avg["mdc_avg"], 0), 
                  "goals": round(home_avg["goals_avg"], 0), "hits": round(home_avg["hits_avg"], 0),
-                 "ovr_excitment" :home_team_excitement,"five_min_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} },
+                 "ovr_excitment" :home_team_excitement,"pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} },
         "away": {"hdc": round(away_avg["hdc_avg"], 0), "mdc": round(away_avg["mdc_avg"], 0), 
                  "goals": round(away_avg["goals_avg"], 0), "hits": round(away_avg["hits_avg"], 0),
-                 "ovr_excitment" :away_team_excitement,"five_min_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"}  },
+                 "ovr_excitment" :away_team_excitement,"pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"}  },
         
-        "game": { "ovr_excitment":game_excitement , "five_min_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} }
+        "game": { "ovr_excitment":game_excitement , "pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} }
     }
     return preview_data
 
