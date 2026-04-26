@@ -114,6 +114,20 @@ def get_team_data(team_tla):
     finally:
         session.close()
 
+def get_game_excitement_bonus_average(num_games: int ):
+    session = get_session()
+    try:
+    #Grab the last <num_games> and get each game's game_excitement_bonus and then average it
+        avg_excitement = session.query(func.avg(cast(Game.excitement["bonuses"]['game_excitement_bonus'].astext, Float))).limit(num_games).scalar()
+        avg_excitement -= 1.0
+        logger.info(f"Average excitement bonus for last {num_games} games: {avg_excitement}")
+        return avg_excitement
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise e
+    finally:
+        session.close()
+
 
 def get_series_average(tla_1: str, tla_2: str, lookback_games: int):
     session = get_session()
