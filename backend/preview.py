@@ -14,7 +14,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-AVG_GAME_BUMP = db.get_game_excitement_bonus_average(100) 
+AVG_GAME_BUMP = db.get_game_excitement_bonus_average(20) 
 
 GAME_EXCITEMENT_SCORE_LEVELS = [10, 20.0, 35.0, 40.0, 50.0]
 TEAM_EXCITEMENT_SCORE_LEVELS = [3,6,11.67,13.3,17]
