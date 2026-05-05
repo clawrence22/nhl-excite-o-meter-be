@@ -206,6 +206,7 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
     preview_data["game"]["playoffs"]["data"] = playoffData
     preview_data["game"]["modifiers"] = {}
     preview_data["game"]["bonuses"] = {"series_bonus_expectation": series_bonus_expectation}
+    preview_data["game"]["momentum"]["overall"] = {}
     
     logger.debug(f"preview_data:{preview_data}")
 
