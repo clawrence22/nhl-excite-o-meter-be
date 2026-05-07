@@ -1,5 +1,11 @@
-# Clean up any previous pod with same name to avoid 'already exists' errors
-podman-compose down && echo Dead
+cleanup() {
+    echo -e "Exit existing Pods"
+    podman-compose down
+    exit 1
+}
+
+
+trap cleanup SIGINT
 
 # Start containers (always restart policy)
 podman-compose up --build --force-recreate -d
