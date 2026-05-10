@@ -119,9 +119,7 @@ def simulate_preview(
 
     away_team_excitement = {"raw_excitement_score": away_excitment_avg, "excitement_score": away_excitment_norm,"excitement_level":away_excitement_level,"goal_score": 0.0,"hdc_score": 0.0, "mdc_score": 0.0}
 
-    raw_excitment_score = series_avg
-    if raw_excitement_score == 0.0:
-        raw_excitement_score = calculate_excitement_score(home_excitment_avg,away_excitment_avg,1.5)
+    raw_excitment_score = series_avg if series_avg > 0.0 else calculate_excitement_score(home_excitment_avg,away_excitment_avg,1.5)
     excitment_score = normalize_score(raw_excitment_score,GAME_EXCITEMENT_SCORE_LEVELS)
     excitement_level = sort_excitement_score(excitment_score)
 
