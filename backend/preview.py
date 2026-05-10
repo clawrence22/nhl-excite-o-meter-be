@@ -100,7 +100,7 @@ def calculate_excitement_score(home_team_excitement,away_team_excitement,series_
 def simulate_preview(
     home_avg: str,
     away_avg: str,
-    series_bonus_expectation: float = 1.0
+    series_avg: float = 1.0
 ) -> Dict:
     
     logger.info(f"home_avg:{home_avg}")
@@ -119,11 +119,10 @@ def simulate_preview(
 
     away_team_excitement = {"raw_excitement_score": away_excitment_avg, "excitement_score": away_excitment_norm,"excitement_level":away_excitement_level,"goal_score": 0.0,"hdc_score": 0.0, "mdc_score": 0.0}
 
-    raw_excitment_score = calculate_excitement_score(home_excitment_avg,away_excitment_avg,series_bonus_expectation)
+    raw_excitment_score = series_avg if series_avg > 0.0 else calculate_excitement_score(home_excitment_avg,away_excitment_avg,1.5)
     excitment_score = normalize_score(raw_excitment_score,GAME_EXCITEMENT_SCORE_LEVELS)
     excitement_level = sort_excitement_score(excitment_score)
 
-    game_excitement = {"excitement_score":excitment_score,"excitement_level":excitement_level,"raw_score":raw_excitment_score}
 
     preview_data = {
         "home": {"hdc": round(home_avg["hdc_avg"], 0), "mdc": round(home_avg["mdc_avg"], 0), 
@@ -133,7 +132,7 @@ def simulate_preview(
                  "goals": round(away_avg["goals_avg"], 0), "hits": round(away_avg["hits_avg"], 0),
                  "ovr_excitment" :away_team_excitement,"pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"}  },
         
-        "game": { "ovr_excitment":game_excitement , "pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} }
+        "game": { "ovr_excitment": {"excitement_score":excitment_score,"excitement_level":excitement_level,"raw_score":raw_excitment_score}, "pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} }
     }
     return preview_data
 
@@ -163,18 +162,18 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
             logger.warning(f" No Games found getting L10 average")
             home_team_avg = db.get_team_avg(home_tla,10)
             away_team_avg = db.get_team_avg(away_tla,10)
-            series_bonus_expectation = 1.5
+            series_excitement_avg = 0.0
         else:
             home_team_avg = series_avg.get(home_tla)
             away_team_avg = series_avg.get(away_tla)
-            series_bonus_expectation = max(home_team_avg["series_bonus_expectation"],away_team_avg["series_bonus_expectation"]) 
+            series_excitement_avg = max(home_team_avg["game_excitement_avg"],away_team_avg["game_excitement_avg"]) 
         
     except Exception as ex:
         logger.error(f"Error Getting team stats:{ex}")
         raise ex
     logger.info(f"home_team_avg:{home_team_avg}")
     logger.info(f"away_team_avg:{away_team_avg}")
-    preview_data = simulate_preview(home_team_avg,away_team_avg,series_bonus_expectation)
+    preview_data = simulate_preview(home_team_avg,away_team_avg,series_excitement_avg)
 
     preview_data["home"]["tla"] = home_tla
     preview_data["home"]["name"] = nhl_data["home_team_name"]
@@ -205,7 +204,7 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
     preview_data["game"]["playoffs"] = playoff_data
     preview_data["game"]["playoffs"]["data"] = playoffData
     preview_data["game"]["modifiers"] = {}
-    preview_data["game"]["bonuses"] = {"series_bonus_expectation": series_bonus_expectation}
+    preview_data["game"]["bonuses"] = {}
     preview_data["game"]["momentum"] = {"overall":{}}
     
     logger.debug(f"preview_data:{preview_data}")

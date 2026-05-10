@@ -105,9 +105,9 @@ def extract_side(team_side, games_subq):
                 Float,
             ).label("excitement"),
             cast(
-                Game.game["bonuses"]["game_excitement_bonus"].astext,
+                Game.game["ovr_excitment"]["raw_score"].astext,
                 Float,
-            ).label("series_bonus"),
+            ).label("game_excitement"),
         )
         .select_from(Game)
         .join(games_subq, Game.id == games_subq.c.id)
@@ -224,13 +224,13 @@ def get_series_average(tla_1: str, tla_2: str, lookback_games: int):
                 func.avg(combined.c.hdc).label("hdc_avg"),
                 func.avg(combined.c.mdc).label("mdc_avg"),
                 func.avg(combined.c.excitement).label("excitement_avg"),
-                func.mode()
-                .within_group(combined.c.series_bonus)
-                .label("series_bonus_expectation"),
+                func.avg(combined.c.game_excitement).label("game_excitement_avg"),
             )
             .group_by(combined.c.team_tla)
         )
 
         results = session.execute(stmt).all()
+        series_results = {row.team_tla: dict(row._mapping) for row in results}
+        logger.info(f"Series Results: {series_results}")
 
-        return {row.team_tla: dict(row._mapping) for row in results}
+        return series_results 
