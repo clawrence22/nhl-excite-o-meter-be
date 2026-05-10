@@ -150,7 +150,7 @@ def create_app() -> Flask:
                 playoff_data = get_playoff_data(game_id,game_date)
                 logger.info(f"Game {game_id} not found in db, assuming future game, getting preview {playoff_data}")
                 game_data = preview.generate_game_preview(game_id,playoffData=playoff_data,game_date=game_date)
-            
+            logger.info(f"{game_id} game_data:{game_data}")
             return jsonify(game_data)
         except Exception as e:
             logger.error(f"Error processing game {game_id}: {e}")
