@@ -230,6 +230,7 @@ def get_series_average(tla_1: str, tla_2: str, lookback_games: int):
         )
 
         results = session.execute(stmt).all()
-        logger.info(f"Series Results: {row.team_tla: dict(row._mapping) for row in results}")
+        series_results = {row.team_tla: dict(row._mapping) for row in results}
+        logger.info(f"Series Results: {series_results}")
 
-        return {row.team_tla: dict(row._mapping) for row in results}
+        return series_results 
