@@ -105,7 +105,7 @@ def extract_side(team_side, games_subq):
                 Float,
             ).label("excitement"),
             cast(
-                Game.game["ovr_excitment"]["raw_excitement_score"].astext,
+                Game.game["ovr_excitment"]["raw_score"].astext,
                 Float,
             ).label("game_excitement"),
         )
