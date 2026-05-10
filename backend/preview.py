@@ -123,7 +123,6 @@ def simulate_preview(
     excitment_score = normalize_score(raw_excitment_score,GAME_EXCITEMENT_SCORE_LEVELS)
     excitement_level = sort_excitement_score(excitment_score)
 
-    game_excitement = {"excitement_score":excitment_score,"excitement_level":excitement_level,"raw_score":raw_excitment_score}
 
     preview_data = {
         "home": {"hdc": round(home_avg["hdc_avg"], 0), "mdc": round(home_avg["mdc_avg"], 0), 
@@ -133,7 +132,7 @@ def simulate_preview(
                  "goals": round(away_avg["goals_avg"], 0), "hits": round(away_avg["hits_avg"], 0),
                  "ovr_excitment" :away_team_excitement,"pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"}  },
         
-        "game": { "ovr_excitment":series_avg , "pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} }
+        "game": { "ovr_excitment": {"excitement_score":excitment_score,"excitement_level":excitement_level,"raw_score":raw_excitment_score}, "pulse_excitment" :{"excitement_score":0.0,"excitement_level":"Too Early"} }
     }
     return preview_data
 
