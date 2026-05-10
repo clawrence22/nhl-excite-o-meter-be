@@ -13,7 +13,7 @@ import numpy as np
 setup_logging()
 logger = logging.getLogger(__name__)
 
-GAME_EXCITEMENT_SCORE_LEVELS = [10, 20.0, 35.0, 40.0, 50.0]
+GAME_EXCITEMENT_SCORE_LEVELS = [8, 16.5, 27.0, 35.0, 40.0]
 TEAM_EXCITEMENT_SCORE_LEVELS = [3,6,11.67,13.3,17]
 
 MID_THRESHOLD_NORMAL = 33.00
