@@ -20,6 +20,11 @@ MID_THRESHOLD_NORMAL = 33.00
 BUZZ_THRESHOLD_NORMAL = 66.00
 BURNER_THRESHOLD_NORMAL = 80.00
 
+PLAYOFF_BONUS = 0.50
+GAME_SEVEN_BONUS = 0.15
+ELIMINATION_GAME_BONUS = 0.20
+CUP_FINAL_BONUS = 0.25
+
 
 def get_data_from_nhl(game_id):
     logger.info(f"Getting teams for game {game_id}")
