@@ -62,7 +62,19 @@ def sort_broadcast_data(tv_broadcasts):
     
     return broadcast_data
 
+def calculate_playoff_bonus(playoff_data):
+    playoff_bonus = 1.0
 
+    if playoff_data["is_playoff"]:
+        playoff_bonus += PLAYOFF_BONUS
+    if playoff_data["game_seven"]:
+        playoff_bonus += GAME_SEVEN_BONUS
+    if playoff_data["elimination_game"]:
+        playoff_bonus += ELIMINATION_GAME_BONUS
+    if playoff_data["cup_final"]:
+        playoff_bonus += CUP_FINAL_BONUS
+    
+    return playoff_bonus
 
 def normalize_score(score,thresholds):
     
@@ -100,7 +112,8 @@ def calculate_excitement_score(home_team_excitement,away_team_excitement,series_
 def simulate_preview(
     home_avg: str,
     away_avg: str,
-    series_avg: float = 1.0
+    series_avg: float = 1.0,
+    playoff_data: dict
 ) -> Dict:
     
     logger.info(f"home_avg:{home_avg}")
@@ -120,6 +133,11 @@ def simulate_preview(
     away_team_excitement = {"raw_excitement_score": away_excitment_avg, "excitement_score": away_excitment_norm,"excitement_level":away_excitement_level,"goal_score": 0.0,"hdc_score": 0.0, "mdc_score": 0.0}
 
     raw_excitment_score = series_avg if series_avg > 0.0 else calculate_excitement_score(home_excitment_avg,away_excitment_avg,1.5)
+    
+    playoff_bonus = calculate_playoff_bonus(playoff_data)
+    
+    raw_excitment_score *= playoff_bonus
+    
     excitment_score = normalize_score(raw_excitment_score,GAME_EXCITEMENT_SCORE_LEVELS)
     excitement_level = sort_excitement_score(excitment_score)
 
@@ -173,20 +191,7 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
         raise ex
     logger.info(f"home_team_avg:{home_team_avg}")
     logger.info(f"away_team_avg:{away_team_avg}")
-    preview_data = simulate_preview(home_team_avg,away_team_avg,series_excitement_avg)
-
-    preview_data["home"]["tla"] = home_tla
-    preview_data["home"]["name"] = nhl_data["home_team_name"]
-    preview_data["away"]["tla"] = away_tla
-    preview_data["away"]["name"] = nhl_data["away_team_name"]
-
-    preview_data["game"]["tv_broadcast"] = sort_broadcast_data(nhl_data["tv_broadcasts"])
-    preview_data["game"]["start_time"] = nhl_data["start_time_utc"]
-    preview_data["game"]["game_date"] = game_date
-    preview_data["game"]["period"] = "Preview"
-    preview_data["game"]["is_game_over"] = False
-    preview_data["game"]["intermission"] = False
-
+    
     playoff_data = {}
 
     if playoffData is None:
@@ -200,6 +205,22 @@ def generate_game_preview(game_id,playoffData,game_date = ""):
         playoff_data["elimination_game"] = (playoffData["topSeedWins"] == 3 or playoffData["bottomSeedWins"] == 3 )
         playoff_data["cup_final"] = (playoffData["round"] == 4)
        
+    
+    preview_data = simulate_preview(home_team_avg,away_team_avg,series_excitement_avg,playoff_data)
+
+    preview_data["home"]["tla"] = home_tla
+    preview_data["home"]["name"] = nhl_data["home_team_name"]
+    preview_data["away"]["tla"] = away_tla
+    preview_data["away"]["name"] = nhl_data["away_team_name"]
+
+    preview_data["game"]["tv_broadcast"] = sort_broadcast_data(nhl_data["tv_broadcasts"])
+    preview_data["game"]["start_time"] = nhl_data["start_time_utc"]
+    preview_data["game"]["game_date"] = game_date
+    preview_data["game"]["period"] = "Preview"
+    preview_data["game"]["is_game_over"] = False
+    preview_data["game"]["intermission"] = False
+
+    
     
     preview_data["game"]["playoffs"] = playoff_data
     preview_data["game"]["playoffs"]["data"] = playoffData
