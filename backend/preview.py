@@ -114,8 +114,8 @@ def calculate_excitement_score(home_team_excitement,away_team_excitement,series_
 def simulate_preview(
     home_avg: str,
     away_avg: str,
-    series_avg: float = 1.0,
-    playoff_data: dict
+    series_avg: float,
+    playoff_data: dict 
 ) -> Dict:
     
     logger.info(f"home_avg:{home_avg}")
